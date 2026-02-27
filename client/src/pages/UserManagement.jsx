@@ -19,6 +19,7 @@ import {
   FaUserPlus,
   FaShieldAlt,
   FaChartBar,
+  FaEnvelope,
 } from 'react-icons/fa';
 
 const UserManagement = () => {
