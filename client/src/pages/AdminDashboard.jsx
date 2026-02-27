@@ -93,207 +93,223 @@ const AdminDashboard = () => {
 
   if (loading) return <LoadingSpinner />;
 
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+
   const statCards = stats ? [
-    { icon: FaUserGraduate, value: stats.totalStudents, label: 'Students', color: '#3b82f6', bg: '#eff6ff', trend: '+12%' },
-    { icon: FaBuilding, value: stats.totalCompanies, label: 'Companies', color: '#10b981', bg: '#ecfdf5', trend: '+8%' },
-    { icon: FaBriefcase, value: stats.totalJobs, label: 'Job Posts', color: '#f59e0b', bg: '#fffbeb', trend: '+24%' },
-    { icon: FaUsers, value: stats.totalApplications || 0, label: 'Applications', color: '#6366f1', bg: '#eef2ff', trend: '+31%' },
-    { icon: FaTrophy, value: stats.totalSelected, label: 'Placed', color: '#22c55e', bg: '#f0fdf4', trend: '+5%' },
-    { icon: FaClock, value: stats.pendingCompanies, label: 'Pending', color: '#ef4444', bg: '#fef2f2', trend: null },
+    { icon: FaUserGraduate, value: stats.totalStudents, label: 'Students', variant: 'blue' },
+    { icon: FaBuilding, value: stats.totalCompanies, label: 'Companies', variant: 'emerald' },
+    { icon: FaBriefcase, value: stats.totalJobs, label: 'Job Posts', variant: 'violet' },
+    { icon: FaUsers, value: stats.totalApplications || 0, label: 'Applications', variant: 'cyan' },
+    { icon: FaTrophy, value: stats.totalSelected, label: 'Placed', variant: 'green' },
+    { icon: FaClock, value: stats.pendingCompanies, label: 'Pending', variant: 'amber' },
   ] : [];
 
   return (
-    <div className="adm-dashboard">
-      {/* ══════════ Header ══════════ */}
-      <div className="adm-header">
-        <div className="adm-header-left">
-          <div className="adm-header-icon">
-            <FaShieldAlt size={22} />
-          </div>
-          <div>
-            <h2 className="adm-header-title">Admin Dashboard</h2>
-            <p className="adm-header-sub">Platform management & analytics centre</p>
-          </div>
-        </div>
-        <div className="adm-header-right">
-          <button
-            className="adm-refresh-btn"
-            onClick={handleRefresh}
-            disabled={refreshing}
-            title="Refresh data"
-          >
-            <FaSyncAlt size={14} className={refreshing ? 'adm-spin' : ''} />
-          </button>
-          {pendingCompanies.length > 0 && (
-            <div className="adm-pending-badge">
-              <FaExclamationTriangle size={14} />
-              <span>{pendingCompanies.length} Pending</span>
+    <div className="phd-page">
+      {/* Hero Header */}
+      <div className="phd-hero">
+        <div className="phd-hero-bg" />
+        <div className="phd-hero-content">
+          <div className="phd-hero-left">
+            <div className="phd-hero-icon">
+              <FaShieldAlt size={26} />
             </div>
-          )}
+            <div>
+              <h1 className="phd-hero-title">{greeting}, Admin 👋</h1>
+              <p className="phd-hero-sub">Platform management & analytics centre</p>
+            </div>
+          </div>
+          <div className="phd-hero-date">
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              title="Refresh data"
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                border: 'none',
+                color: '#fff',
+                cursor: 'pointer',
+                marginRight: '15px',
+                padding: '8px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.3s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+            >
+              <FaSyncAlt size={14} className={refreshing ? 'adm-spin' : ''} />
+            </button>
+            <FaCalendarAlt size={12} />
+            <span>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+          </div>
         </div>
       </div>
 
-      {/* ══════════ Stats Grid ══════════ */}
-      <div className="adm-stats-grid">
-        {statCards.map((s, i) => (
-          <div key={i} className="adm-stat-card">
-            <div className="adm-stat-icon" style={{ background: s.bg, color: s.color }}>
-              <s.icon size={20} />
+      <div className="phd-stats-row">
+        {statCards.slice(0, 4).map((stat, i) => (
+          <div key={i} className={`phd-stat-card phd-stat-${stat.variant}`} style={{ animationDelay: `${i * 0.05}s` }}>
+            <div className="phd-stat-icon-wrap"><stat.icon size={20} /></div>
+            <div className="phd-stat-content">
+              <span className="phd-stat-number">{stat.value}</span>
+              <span className="phd-stat-text">{stat.label}</span>
             </div>
-            <div className="adm-stat-info">
-              <div className="adm-stat-value">{s.value}</div>
-              <div className="adm-stat-label">{s.label}</div>
-            </div>
-            {s.trend && (
-              <div className="adm-stat-trend">
-                <FaArrowUp size={9} /> {s.trend}
-              </div>
-            )}
-            <div className="adm-stat-decoration" style={{ background: s.color }} />
+            <div className="phd-stat-glow" />
           </div>
         ))}
       </div>
 
-      {/* ══════════ Quick Overview Row ══════════ */}
-      <div className="adm-overview-row">
-        {/* Platform Stats */}
-        <div className="adm-overview-card">
-          <div className="adm-overview-header">
-            <FaServer size={14} className="text-success" />
-            <span>Platform Status</span>
+      <div className="phd-stats-row phd-stats-row-2">
+        {statCards.slice(4).map((stat, i) => (
+          <div key={i + 4} className={`phd-stat-card phd-stat-${stat.variant}`} style={{ animationDelay: `${(i + 4) * 0.05}s` }}>
+            <div className="phd-stat-icon-wrap"><stat.icon size={20} /></div>
+            <div className="phd-stat-content">
+              <span className="phd-stat-number">{stat.value}</span>
+              <span className="phd-stat-text">{stat.label}</span>
+            </div>
+            <div className="phd-stat-glow" />
           </div>
-          <div className="adm-health-grid">
-            <div className="adm-health-item">
-              <span className="adm-health-dot adm-health-green" />
-              <span>System Online</span>
-            </div>
-            <div className="adm-health-item">
-              <span className="adm-health-value">{stats?.totalStudents || 0}</span>
-              <span>Students</span>
-            </div>
-            <div className="adm-health-item">
-              <span className="adm-health-value">{stats?.totalCompanies || 0}</span>
-              <span>Companies</span>
-            </div>
-            <div className="adm-health-item">
-              <span className="adm-health-value">{stats?.totalJobs || 0}</span>
-              <span>Jobs</span>
-            </div>
-          </div>
-        </div>
+        ))}
 
-        {/* Quick Actions */}
-        <div className="adm-overview-card">
-          <div className="adm-overview-header">
-            <FaBolt size={14} className="text-warning" />
-            <span>Quick Actions</span>
+        <Link to="/admin/users" style={{ textDecoration: 'none', display: 'block', flex: 1, minWidth: '220px' }}>
+          <div className={`phd-stat-card phd-stat-pink`} style={{ animationDelay: `0.3s`, height: '100%', cursor: 'pointer' }}>
+            <div className="phd-stat-icon-wrap"><FaUsers size={20} /></div>
+            <div className="phd-stat-content">
+              <span className="phd-stat-number">Manage Users</span>
+              <span className="phd-stat-text">Review platform accounts</span>
+            </div>
+            <div className="phd-stat-glow" />
           </div>
-          <div className="adm-quick-actions">
-            <Link to="/admin/users" className="adm-quick-btn">
-              <FaUsers size={12} />
-              <span>Manage Users</span>
-              <FaArrowRight size={10} className="ms-auto" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Admin Tip */}
-        <div className="adm-overview-card adm-tip-card">
-          <div className="adm-overview-header">
-            <FaRegLightbulb size={14} className="text-primary" />
-            <span>Admin Tip</span>
-          </div>
-          <p className="adm-tip-text">Review pending company registrations promptly to help employers start posting jobs quickly.</p>
-        </div>
+        </Link>
       </div>
 
-      {/* ══════════ PENDING APPROVALS SECTION ══════════ */}
-      <div id="approvals" className="adm-section">
-        <div className="adm-section-header">
-          <div>
-            <h5 className="adm-section-title">
-              <FaClock className="text-warning" /> Pending Company Registrations
-            </h5>
-            <p className="adm-section-sub">{pendingCompanies.length} companies awaiting your review</p>
-          </div>
-        </div>
-
-        {pendingCompanies.length === 0 ? (
-          <div className="adm-empty-state">
-            <div className="adm-empty-icon adm-empty-success">
-              <FaCheckCircle size={40} />
+      <div className="phd-content">
+        {/* Pending Approvals */}
+        <div className="phd-card phd-card-full" id="approvals">
+          <div className="phd-card-header">
+            <div className="phd-card-icon phd-card-icon-amber"><FaClock size={16} /></div>
+            <div>
+              <h3 className="phd-card-title">Pending Company Registrations</h3>
+              <p className="phd-card-sub">Review and approve new employer accounts</p>
             </div>
-            <h6>All Caught Up!</h6>
-            <p>No pending company registrations to review right now.</p>
+            <span className="phd-card-badge">
+              {pendingCompanies.length} pending
+            </span>
           </div>
-        ) : (
-          <div className="adm-approval-grid">
-            {pendingCompanies.map((c) => (
-              <div key={c._id} className="adm-approval-card">
-                <div className="adm-approval-header">
-                  <div className="adm-approval-avatar">
-                    {(c.companyName || c.name).charAt(0).toUpperCase()}
-                  </div>
-                  <div className="adm-approval-meta">
-                    <h6 className="mb-0 fw-bold">{c.companyName || '—'}</h6>
-                    <span className="adm-approval-date">
-                      <FaCalendarAlt size={10} className="me-1" />
-                      Registered {formatDate(c.createdAt)}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="adm-approval-details">
-                  <div className="adm-detail-row">
-                    <FaUsers size={12} />
-                    <span>Contact: <strong>{c.name}</strong></span>
-                  </div>
-                  <div className="adm-detail-row">
-                    <FaEnvelope size={12} />
-                    <span>{c.email}</span>
-                  </div>
-                  {c.website && (
-                    <div className="adm-detail-row">
-                      <FaGlobe size={12} />
-                      <a href={c.website} target="_blank" rel="noreferrer">
-                        {c.website.replace(/^https?:\/\//, '').slice(0, 30)}
-                        <FaExternalLinkAlt size={9} className="ms-1" />
-                      </a>
-                    </div>
-                  )}
-                  {c.description && (
-                    <p className="adm-approval-desc">{c.description}</p>
-                  )}
-                </div>
-
-                <div className="adm-approval-actions">
-                  <button
-                    className="adm-btn adm-btn-approve"
-                    onClick={() => handleApprove(c._id)}
-                    disabled={!!actionLoading[c._id]}
-                  >
-                    {actionLoading[c._id] === 'approve' ? (
-                      <span className="spinner-border spinner-border-sm" />
-                    ) : (
-                      <><FaCheck size={12} /> Approve</>
-                    )}
-                  </button>
-                  <button
-                    className="adm-btn adm-btn-reject"
-                    onClick={() => handleReject(c._id)}
-                    disabled={!!actionLoading[c._id]}
-                  >
-                    {actionLoading[c._id] === 'reject' ? (
-                      <span className="spinner-border spinner-border-sm" />
-                    ) : (
-                      <><FaTimes size={12} /> Reject</>
-                    )}
-                  </button>
-                </div>
+          {pendingCompanies.length === 0 ? (
+            <div className="adm-empty-state" style={{ padding: '60px 20px', textAlign: 'center' }}>
+              <div className="adm-empty-icon adm-empty-success" style={{
+                margin: '0 auto 16px',
+                width: '64px',
+                height: '64px',
+                background: '#ecfdf5',
+                color: '#10b981',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <FaCheckCircle size={32} />
               </div>
-            ))}
-          </div>
-        )}
+              <h6 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1e293b', marginBottom: '8px' }}>All Caught Up!</h6>
+              <p style={{ color: '#64748b' }}>No pending company registrations to review right now.</p>
+            </div>
+          ) : (
+            <div className="phd-table-wrap">
+              <table className="phd-table">
+                <thead>
+                  <tr>
+                    <th>Company Name</th>
+                    <th>Contact Person</th>
+                    <th>Details</th>
+                    <th>Registered On</th>
+                    <th className="phd-th-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingCompanies.map((c, i) => (
+                    <tr key={c._id} className="phd-tr" style={{ animationDelay: `${i * 0.05}s` }}>
+                      <td>
+                        <div className="phd-company-cell">
+                          <div className="phd-company-dot" style={{
+                            background: `hsl(${(c.companyName?.charCodeAt(0) || 65) * 9 % 360}, 55%, 92%)`,
+                            color: `hsl(${(c.companyName?.charCodeAt(0) || 65) * 9 % 360}, 55%, 35%)`
+                          }}>
+                            {(c.companyName || c.name || '?').charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <span style={{ display: 'block', fontWeight: 600, color: '#334155' }}>
+                              {c.companyName || '—'}
+                            </span>
+                            {c.website && (
+                              <a href={c.website} target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: '#6366f1', textDecoration: 'none' }}>
+                                <FaGlobe size={10} style={{ marginRight: '4px' }} />
+                                {c.website.replace(/^https?:\/\//, '').slice(0, 25)}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="phd-student-info">
+                          <span className="phd-student-name">{c.name}</span>
+                          <span className="phd-student-email text-muted">
+                            <FaEnvelope size={10} style={{ marginRight: '4px' }} />
+                            {c.email}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="phd-pkg-badge" style={{ whiteSpace: 'normal', maxWidth: '250px', background: 'transparent', color: '#64748b', fontSize: '0.85rem' }}>
+                          {c.description ? (c.description.length > 60 ? c.description.slice(0, 60) + '...' : c.description) : 'No description provided'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="phd-dept-badge" style={{ background: '#f8fafc', color: '#475569' }}>
+                          {formatDate(c.createdAt)}
+                        </span>
+                      </td>
+                      <td className="phd-td-right">
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                          <button
+                            onClick={() => handleApprove(c._id)}
+                            disabled={!!actionLoading[c._id]}
+                            style={{
+                              background: '#10b981', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                            }}
+                          >
+                            {actionLoading[c._id] === 'approve' ? (
+                              <span className="spinner-border spinner-border-sm" style={{ width: '12px', height: '12px' }} />
+                            ) : (
+                              <><FaCheck size={12} /> Approve</>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleReject(c._id)}
+                            disabled={!!actionLoading[c._id]}
+                            style={{
+                              background: '#ef4444', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                            }}
+                          >
+                            {actionLoading[c._id] === 'reject' ? (
+                              <span className="spinner-border spinner-border-sm" style={{ width: '12px', height: '12px' }} />
+                            ) : (
+                              <><FaTimes size={12} /> Reject</>
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
