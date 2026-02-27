@@ -244,125 +244,169 @@ const UserManagement = () => {
               <p style={{ color: '#64748b' }}>Try adjusting your search or filter criteria.</p>
             </div>
           ) : (
-            <div className="phd-table-wrap">
-              <table className="phd-table">
+            <div style={{ overflowX: 'auto', padding: '10px 5px', minHeight: '400px' }}>
+              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px', minWidth: '950px' }}>
                 <thead>
                   <tr>
-                    <th>User</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Joined</th>
-                    <th className="phd-th-right">Actions</th>
+                    <th style={{ padding: '0 24px 8px', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'left' }}>Profile & Identity</th>
+                    <th style={{ padding: '0 24px 8px', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'left' }}>Account Role</th>
+                    <th style={{ padding: '0 24px 8px', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'left' }}>Activity Status</th>
+                    <th style={{ padding: '0 24px 8px', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'left' }}>Registration Date</th>
+                    <th style={{ padding: '0 24px 8px', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Management</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map((u, i) => (
-                    <tr key={u._id} className="phd-tr" style={{ animationDelay: `${i * 0.05}s`, opacity: u.isBlocked ? 0.7 : 1 }}>
-                      <td>
-                        <div className="phd-company-cell">
-                          <div className="phd-company-dot" style={{
-                            background: u.isBlocked ? '#fee2e2' : u.role === 'admin' ? '#ede9fe' : u.role === 'placementHead' ? '#ffedd5' : u.role === 'company' ? '#d1fae5' : '#dbeafe',
-                            color: u.isBlocked ? '#ef4444' : u.role === 'admin' ? '#8b5cf6' : u.role === 'placementHead' ? '#f97316' : u.role === 'company' ? '#10b981' : '#3b82f6',
-                            fontSize: '1.1rem',
-                            fontWeight: 600
-                          }}>
-                            {u.name?.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <span style={{ display: 'block', fontWeight: 600, color: u.isBlocked ? '#94a3b8' : '#334155' }}>
-                              {u.name}
-                            </span>
-                            <span className="phd-student-email text-muted" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-                              <span style={{ display: 'flex', alignItems: 'center' }}>
-                                <FaEnvelope size={10} style={{ marginRight: '4px' }} />
-                                {u.email}
+                  {filteredUsers.map((u, i) => {
+                    const isBlocked = u.isBlocked;
+                    const rBase = u.role === 'admin' ? '#8b5cf6' : u.role === 'placementHead' ? '#f97316' : u.role === 'company' ? '#10b981' : '#3b82f6';
+                    const rBg = u.role === 'admin' ? '#ede9fe' : u.role === 'placementHead' ? '#ffedd5' : u.role === 'company' ? '#d1fae5' : '#dbeafe';
+                    const isActive = u.lastActive && new Date() - new Date(u.lastActive) < 5 * 60 * 1000;
+
+                    return (
+                      <tr
+                        key={u._id}
+                        style={{
+                          animation: 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards',
+                          animationDelay: `${i * 0.05}s`,
+                          background: isBlocked ? '#fffbfb' : '#ffffff',
+                          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -2px rgba(0,0,0,0.01)',
+                          transition: 'all 0.25s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-3px)';
+                          e.currentTarget.style.boxShadow = '0 12px 20px -8px rgba(0,0,0,0.08), 0 4px 6px -3px rgba(0,0,0,0.04)';
+                          e.currentTarget.style.borderColor = '#e2e8f0';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -2px rgba(0,0,0,0.01)';
+                          e.currentTarget.style.borderColor = 'transparent';
+                        }}
+                      >
+                        <td style={{ padding: '20px 24px', borderRadius: '16px 0 0 16px', border: '1px solid #f1f5f9', borderRight: 'none', background: 'inherit' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{
+                              width: '44px', height: '44px', borderRadius: '12px',
+                              background: isBlocked ? '#fee2e2' : rBg,
+                              color: isBlocked ? '#ef4444' : rBase,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: '1.25rem', fontWeight: 700, boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)'
+                            }}>
+                              {u.name?.charAt(0).toUpperCase()}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <span style={{ fontWeight: 600, color: isBlocked ? '#94a3b8' : '#1e293b', fontSize: '1.05rem', letterSpacing: '-0.2px' }}>
+                                {u.name}
                               </span>
-                              {u.companyName && (
-                                <span style={{ display: 'flex', alignItems: 'center', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontSize: '0.75rem' }}>
-                                  <FaBuilding size={10} style={{ marginRight: '4px' }} />
-                                  {u.companyName}
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+                                  <FaEnvelope size={10} style={{ marginRight: '6px', opacity: 0.7 }} />
+                                  {u.email}
                                 </span>
-                              )}
-                            </span>
+                                {u.companyName && (
+                                  <span style={{ display: 'flex', alignItems: 'center', background: '#f8fafc', padding: '3px 8px', borderRadius: '6px', fontSize: '0.75rem', color: '#475569', fontWeight: 500, border: '1px solid #e2e8f0' }}>
+                                    <FaBuilding size={10} style={{ marginRight: '5px', color: '#64748b' }} />
+                                    {u.companyName}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="phd-type-badge" style={{
-                          background: u.role === 'admin' ? '#ede9fe' : u.role === 'placementHead' ? '#ffedd5' : u.role === 'company' ? '#d1fae5' : '#dbeafe',
-                          color: u.role === 'admin' ? '#8b5cf6' : u.role === 'placementHead' ? '#f97316' : u.role === 'company' ? '#10b981' : '#3b82f6',
-                        }}>
-                          {u.role === 'admin' ? <><FaUserShield size={10} style={{ marginRight: '4px' }} /> Admin</> :
-                            u.role === 'placementHead' ? <><FaChartBar size={10} style={{ marginRight: '4px' }} /> Placement</> :
-                              u.role === 'company' ? <><FaBuilding size={10} style={{ marginRight: '4px' }} /> Company</> :
-                                <><FaUserGraduate size={10} style={{ marginRight: '4px' }} /> Student</>}
-                        </span>
-                      </td>
-                      <td>
-                        {u.isBlocked ? (
-                          <span className="phd-type-badge" style={{ background: '#fee2e2', color: '#ef4444' }}>
-                            <FaBan size={10} style={{ marginRight: '4px' }} /> Blocked
+                        </td>
+                        <td style={{ padding: '20px 24px', borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', background: 'inherit' }}>
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center',
+                            background: isBlocked ? '#f1f5f9' : rBg,
+                            color: isBlocked ? '#94a3b8' : rBase,
+                            padding: '6px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600,
+                            letterSpacing: '0.3px'
+                          }}>
+                            {u.role === 'admin' ? <><FaUserShield size={12} style={{ marginRight: '6px' }} /> Admin</> :
+                              u.role === 'placementHead' ? <><FaChartBar size={12} style={{ marginRight: '6px' }} /> Placement Head</> :
+                                u.role === 'company' ? <><FaBuilding size={12} style={{ marginRight: '6px' }} /> Employer</> :
+                                  <><FaUserGraduate size={12} style={{ marginRight: '6px' }} /> Student</>}
                           </span>
-                        ) : u.lastActive && new Date() - new Date(u.lastActive) < 5 * 60 * 1000 ? (
-                          <span className="phd-type-badge" style={{ background: '#dcfce7', color: '#16a34a' }}>
-                            <FaCheckCircle size={10} style={{ marginRight: '4px' }} /> Active
-                          </span>
-                        ) : (
-                          <span className="phd-type-badge" style={{ background: '#f1f5f9', color: '#64748b' }}>
-                            <FaClock size={10} style={{ marginRight: '4px' }} /> Inactive
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        <span className="phd-dept-badge" style={{ background: '#f8fafc', color: '#475569' }}>
-                          {formatDate(u.createdAt)}
-                        </span>
-                      </td>
-                      <td className="phd-td-right">
-                        {u.role !== 'admin' && u.role !== 'placementHead' && (
-                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                            <button
-                              onClick={() => handleToggleBlock(u._id)}
-                              disabled={!!actionLoading[u._id]}
-                              title={u.isBlocked ? 'Unblock' : 'Block'}
-                              style={{
-                                width: '32px', height: '32px', borderRadius: '8px', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                                background: u.isBlocked ? '#dcfce7' : '#fee2e2',
-                                color: u.isBlocked ? '#16a34a' : '#ef4444',
-                                transition: 'all 0.2s', opacity: actionLoading[u._id] ? 0.7 : 1
-                              }}
-                            >
-                              {actionLoading[u._id] === 'block' ? (
-                                <span className="spinner-border spinner-border-sm" style={{ width: '12px', height: '12px' }} />
-                              ) : u.isBlocked ? (
-                                <FaUnlock size={14} />
-                              ) : (
-                                <FaBan size={14} />
-                              )}
-                            </button>
-                            <button
-                              onClick={() => handleDelete(u._id)}
-                              disabled={!!actionLoading[u._id]}
-                              title="Delete user"
-                              style={{
-                                width: '32px', height: '32px', borderRadius: '8px', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                                background: '#f1f5f9', color: '#64748b',
-                                transition: 'all 0.2s', opacity: actionLoading[u._id] ? 0.7 : 1
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.color = '#ef4444'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#64748b'; }}
-                            >
-                              {actionLoading[u._id] === 'delete' ? (
-                                <span className="spinner-border spinner-border-sm" style={{ width: '12px', height: '12px' }} />
-                              ) : (
-                                <FaTrash size={14} />
-                              )}
-                            </button>
+                        </td>
+                        <td style={{ padding: '20px 24px', borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', background: 'inherit' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {isBlocked ? (
+                              <>
+                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 0 3px #fee2e2' }} />
+                                <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.85rem' }}>Blocked</span>
+                              </>
+                            ) : isActive ? (
+                              <>
+                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 0 3px #d1fae5', animation: 'pulse 2s infinite' }} />
+                                <span style={{ color: '#10b981', fontWeight: 600, fontSize: '0.85rem' }}>Active Now</span>
+                              </>
+                            ) : (
+                              <>
+                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#cbd5e1', boxShadow: '0 0 0 3px #f1f5f9' }} />
+                                <span style={{ color: '#64748b', fontWeight: 500, fontSize: '0.85rem' }}>Offline</span>
+                              </>
+                            )}
                           </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td style={{ padding: '20px 24px', borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', background: 'inherit' }}>
+                          <span style={{ color: '#475569', fontSize: '0.9rem', fontWeight: 500, display: 'flex', alignItems: 'center' }}>
+                            <FaClock size={12} style={{ marginRight: '8px', color: '#94a3b8' }} />
+                            {formatDate(u.createdAt)}
+                          </span>
+                        </td>
+                        <td style={{ padding: '20px 24px', borderRadius: '0 16px 16px 0', border: '1px solid #f1f5f9', borderLeft: 'none', background: 'inherit' }}>
+                          {u.role !== 'admin' && u.role !== 'placementHead' ? (
+                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                              <button
+                                onClick={() => handleToggleBlock(u._id)}
+                                disabled={!!actionLoading[u._id]}
+                                title={isBlocked ? 'Restore Access' : 'Suspend User'}
+                                style={{
+                                  width: '38px', height: '38px', borderRadius: '10px', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                                  background: isBlocked ? '#ecfdf5' : '#fff1f2',
+                                  color: isBlocked ? '#10b981' : '#e11d48',
+                                  boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
+                                  transition: 'all 0.2s', opacity: actionLoading[u._id] ? 0.7 : 1
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                              >
+                                {actionLoading[u._id] === 'block' ? (
+                                  <span className="spinner-border spinner-border-sm" style={{ width: '14px', height: '14px' }} />
+                                ) : isBlocked ? (
+                                  <FaUnlock size={15} />
+                                ) : (
+                                  <FaBan size={15} />
+                                )}
+                              </button>
+                              <button
+                                onClick={() => handleDelete(u._id)}
+                                disabled={!!actionLoading[u._id]}
+                                title="Delete permanently"
+                                style={{
+                                  width: '38px', height: '38px', borderRadius: '10px', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                                  background: '#f8fafc', color: '#64748b',
+                                  boxShadow: 'inset 0 0 0 1px #e2e8f0',
+                                  transition: 'all 0.2s', opacity: actionLoading[u._id] ? 0.7 : 1
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.boxShadow = 'inset 0 0 0 1px #fecaca'; e.currentTarget.style.transform = 'scale(1.05)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.boxShadow = 'inset 0 0 0 1px #e2e8f0'; e.currentTarget.style.transform = 'scale(1)'; }}
+                              >
+                                {actionLoading[u._id] === 'delete' ? (
+                                  <span className="spinner-border spinner-border-sm" style={{ width: '14px', height: '14px' }} />
+                                ) : (
+                                  <FaTrash size={15} />
+                                )}
+                              </button>
+                            </div>
+                          ) : (
+                            <div style={{ color: '#cbd5e1', fontSize: '0.8rem', textAlign: 'right', fontWeight: 500, paddingRight: '10px' }}>
+                              Protected
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
