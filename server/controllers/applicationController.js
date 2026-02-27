@@ -1,0 +1,150 @@
+// Application controller — apply, track, update status
+const Application = require('../models/Application');
+const Job = require('../models/Job');
+const User = require('../models/User');
+const Resume = require('../models/Resume');
+
+// @desc    Apply for a job (student)
+// @route   POST /api/applications/:jobId
+// @access  Student
+exports.applyForJob = async (req, res, next) => {
+  try {
+    const job = await Job.findById(req.params.jobId);
+
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    if (!job.isActive) {
+      return res.status(400).json({ message: 'This job is no longer active' });
+    }
+
+    // Check if already applied
+    const alreadyApplied = await Application.findOne({
+      job: req.params.jobId,
+      student: req.user._id,
+    });
+
+    if (alreadyApplied) {
+      return res.status(400).json({ message: 'You have already applied for this job' });
+    }
+
+    // Check if student has an active resume
+    const activeResume = await Resume.findOne({
+      userId: req.user._id,
+      isActive: true,
+    });
+
+    if (!activeResume) {
+      return res.status(400).json({ message: 'Please upload your resume before applying' });
+    }
+
+    // Get legacy resume path from user for backward compatibility
+    const student = await User.findById(req.user._id);
+
+    const application = await Application.create({
+      job: req.params.jobId,
+      student: req.user._id,
+      resumeId: activeResume._id,
+      resume: student.resume || `/uploads/${activeResume.fileName}`,
+    });
+
+    res.status(201).json(application);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get applications for logged-in student
+// @route   GET /api/applications/my
+// @access  Student
+exports.getMyApplications = async (req, res, next) => {
+  try {
+    const applications = await Application.find({ student: req.user._id })
+      .populate('job', 'title companyName type location salary deadline')
+      .sort({ createdAt: -1 });
+
+    res.json(applications);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get applicants for a specific job (company view)
+// @route   GET /api/applications/job/:jobId
+// @access  Company
+exports.getApplicantsForJob = async (req, res, next) => {
+  try {
+    // Verify the job belongs to this company
+    const job = await Job.findById(req.params.jobId);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    if (
+      job.company.toString() !== req.user._id.toString() &&
+      req.user.role !== 'admin'
+    ) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    const applications = await Application.find({ job: req.params.jobId })
+      .populate('student', 'name email department cgpa skills resume')
+      .populate('resumeId', 'fileName originalFileName mimeType fileSize')
+      .sort({ createdAt: -1 });
+
+    res.json(applications);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update application status (company)
+// @route   PUT /api/applications/:id/status
+// @access  Company
+exports.updateApplicationStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+
+    if (!['applied', 'shortlisted', 'rejected', 'selected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+
+    const application = await Application.findById(req.params.id).populate('job');
+
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    // Ensure company owns the job
+    if (
+      application.job.company.toString() !== req.user._id.toString() &&
+      req.user.role !== 'admin'
+    ) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    application.status = status;
+    await application.save();
+
+    res.json(application);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all applications (admin)
+// @route   GET /api/applications
+// @access  Admin
+exports.getAllApplications = async (req, res, next) => {
+  try {
+    const applications = await Application.find()
+      .populate('job', 'title companyName type')
+      .populate('student', 'name email department')
+      .sort({ createdAt: -1 });
+
+    res.json(applications);
+  } catch (error) {
+    next(error);
+  }
+};

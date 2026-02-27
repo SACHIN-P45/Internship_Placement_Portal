@@ -1,0 +1,130 @@
+// OAuth Callback page — handles OAuth redirect with token
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+const OAuthCallback = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { setUserFromOAuth } = useAuth();
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const data = searchParams.get('data');
+    const errorParam = searchParams.get('error');
+
+    if (errorParam) {
+      setError(
+        errorParam === 'blocked'
+          ? 'Your account has been blocked'
+          : 'OAuth authentication failed. Please try again.'
+      );
+      setTimeout(() => navigate('/login'), 3000);
+      return;
+    }
+
+    if (data) {
+      try {
+        const userData = JSON.parse(decodeURIComponent(data));
+        setUserFromOAuth(userData);
+
+        // Redirect based on role
+        if (userData.role === 'admin') {
+          navigate('/admin/dashboard');
+        } else if (userData.role === 'company') {
+          navigate('/company/dashboard');
+        } else if (userData.role === 'placementHead') {
+          navigate('/placement-head/dashboard');
+        } else {
+          navigate('/student/dashboard');
+        }
+      } catch (err) {
+        setError('Failed to process authentication data');
+        setTimeout(() => navigate('/login'), 3000);
+      }
+    } else {
+      setError('No authentication data received');
+      setTimeout(() => navigate('/login'), 3000);
+    }
+  }, [searchParams, navigate, setUserFromOAuth]);
+
+  return (
+    <div className="oauth-callback-page">
+      <div className="oauth-callback-card">
+        {error ? (
+          <>
+            <div className="oauth-error-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+            </div>
+            <h2>Authentication Failed</h2>
+            <p>{error}</p>
+            <p className="redirect-text">Redirecting to login...</p>
+          </>
+        ) : (
+          <>
+            <div className="oauth-loading-spinner"></div>
+            <h2>Signing you in...</h2>
+            <p>Please wait while we complete your authentication.</p>
+          </>
+        )}
+      </div>
+
+      <style>{`
+        .oauth-callback-page {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          padding: 1rem;
+        }
+        .oauth-callback-card {
+          background: white;
+          padding: 3rem;
+          border-radius: 1rem;
+          text-align: center;
+          max-width: 400px;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .oauth-loading-spinner {
+          width: 50px;
+          height: 50px;
+          border: 4px solid #e5e7eb;
+          border-top-color: #667eea;
+          border-radius: 50%;
+          margin: 0 auto 1.5rem;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        .oauth-error-icon {
+          width: 60px;
+          height: 60px;
+          margin: 0 auto 1.5rem;
+          color: #ef4444;
+        }
+        .oauth-callback-card h2 {
+          font-size: 1.5rem;
+          color: #1f2937;
+          margin-bottom: 0.5rem;
+        }
+        .oauth-callback-card p {
+          color: #6b7280;
+          margin: 0;
+        }
+        .redirect-text {
+          margin-top: 1rem !important;
+          font-size: 0.875rem;
+          color: #9ca3af !important;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default OAuthCallback;
