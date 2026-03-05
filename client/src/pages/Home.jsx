@@ -65,6 +65,7 @@ const Home = () => {
     if (!user) return '/register';
     if (user.role === 'admin') return '/admin/dashboard';
     if (user.role === 'company') return '/company/dashboard';
+    if (user.role === 'placementHead') return '/placement-head/dashboard';
     return '/student/dashboard';
   };
 
@@ -200,7 +201,7 @@ const Home = () => {
                   <div className="hero-orbit orbit-4">
                     <div className="hero-orbit-icon"><FaStar size={14} /></div>
                   </div>
-                  
+
                   {/* Core glowing sphere */}
                   <div className="hero-core">
                     <div className="hero-core-inner">
@@ -208,12 +209,12 @@ const Home = () => {
                     </div>
                     <div className="hero-core-glow" />
                   </div>
-                  
+
                   {/* Animated rings */}
                   <div className="hero-ring ring-1" />
                   <div className="hero-ring ring-2" />
                   <div className="hero-ring ring-3" />
-                  
+
                   {/* Floating particles */}
                   <div className="hero-particle p1" />
                   <div className="hero-particle p2" />

@@ -19,6 +19,7 @@ import {
   FaLayerGroup,
   FaExternalLinkAlt,
   FaStar,
+  FaBookmark,
   FaRegBookmark,
   FaShareAlt,
   FaCalendarAlt,
@@ -40,6 +41,10 @@ const JobDetail = () => {
   const [applied, setApplied] = useState(false);
   const [applying, setApplying] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
+  const [shareToast, setShareToast] = useState('');
+  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarking, setBookmarking] = useState(false);
+  const [bookmarkToast, setBookmarkToast] = useState('');
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -63,6 +68,15 @@ const JobDetail = () => {
     }
   }, [user, id]);
 
+  // Load bookmark status
+  useEffect(() => {
+    if (user?.role === 'student') {
+      jobService.getBookmarkIds()
+        .then(({ data }) => setBookmarked(data.includes(id)))
+        .catch(() => { });
+    }
+  }, [user, id]);
+
   const handleApply = async () => {
     if (!user) return navigate('/login');
     setApplying(true);
@@ -75,6 +89,50 @@ const JobDetail = () => {
       setMessage({ text: err.response?.data?.message || 'Failed to apply', type: 'danger' });
     } finally {
       setApplying(false);
+    }
+  };
+
+  const handleBookmark = async () => {
+    if (!user) return navigate('/login');
+    setBookmarking(true);
+    try {
+      const { data } = await jobService.toggleBookmark(id);
+      setBookmarked(data.bookmarked);
+      setBookmarkToast(data.bookmarked ? '♥️ Saved to bookmarks!' : 'Bookmark removed');
+      setTimeout(() => setBookmarkToast(''), 2500);
+    } catch (err) {
+      setBookmarkToast(err.response?.data?.message || 'Failed to bookmark');
+      setTimeout(() => setBookmarkToast(''), 2500);
+    } finally {
+      setBookmarking(false);
+    }
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    const shareData = {
+      title: job?.title || 'Job Opportunity',
+      text: `Check out this opportunity: ${job?.title} at ${job?.companyName}`,
+      url,
+    };
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(url);
+        setShareToast('🔗 Link copied to clipboard!');
+        setTimeout(() => setShareToast(''), 2500);
+      }
+    } catch (err) {
+      // User cancelled share or clipboard failed — try plain copy
+      try {
+        await navigator.clipboard.writeText(url);
+        setShareToast('🔗 Link copied to clipboard!');
+        setTimeout(() => setShareToast(''), 2500);
+      } catch {
+        setShareToast('❌ Could not copy link');
+        setTimeout(() => setShareToast(''), 2500);
+      }
     }
   };
 
@@ -152,13 +210,21 @@ const JobDetail = () => {
               </div>
             </div>
           </div>
-          <div className="jd-hero-actions">
-            <button className="jd-action-icon" title="Save job">
-              <FaRegBookmark size={16} />
+          <div className="jd-hero-actions" style={{ position: 'relative' }}>
+            <button
+              className={`jd-action-icon ${bookmarked ? 'jd-action-bookmarked' : ''}`}
+              title={bookmarked ? 'Remove bookmark' : 'Save job'}
+              onClick={handleBookmark}
+              disabled={bookmarking}
+            >
+              {bookmarked ? <FaBookmark size={16} /> : <FaRegBookmark size={16} />}
             </button>
-            <button className="jd-action-icon" title="Share">
+            <button className="jd-action-icon" title="Share this job" onClick={handleShare}>
               <FaShareAlt size={14} />
             </button>
+            {(shareToast || bookmarkToast) && (
+              <div className="jd-share-toast">{shareToast || bookmarkToast}</div>
+            )}
           </div>
         </div>
       </div>

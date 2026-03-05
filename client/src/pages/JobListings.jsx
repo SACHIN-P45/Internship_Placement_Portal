@@ -1,4 +1,4 @@
-// Job listings page — professional browse jobs experience
+// Job listings page — premium redesign matching placement dashboard aesthetic
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -23,10 +23,13 @@ import {
   FaArrowRight,
   FaTimes,
   FaSlidersH,
-  FaRocket,
-  FaRegLightbulb,
   FaBookmark,
   FaRegBookmark,
+  FaRocket,
+  FaFilter,
+  FaThLarge,
+  FaList,
+  FaChevronDown,
 } from 'react-icons/fa';
 
 const JobListings = () => {
@@ -40,17 +43,17 @@ const JobListings = () => {
   const [appliedJobs, setAppliedJobs] = useState([]);
   const [bookmarkedJobs, setBookmarkedJobs] = useState([]);
   const [bookmarking, setBookmarking] = useState(null);
-  const [message, setMessage] = useState({ text: '', type: '' });
+  const [toast, setToast] = useState({ text: '', type: '' });
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalJobs, setTotalJobs] = useState(0);
-  const [viewMode, setViewMode] = useState('grid'); // grid | list
+  const [viewMode, setViewMode] = useState('grid');
 
   // Debounced search
   const [searchTerm, setSearchTerm] = useState('');
   useEffect(() => {
-    const timer = setTimeout(() => setSearch(searchTerm), 400);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setSearch(searchTerm), 400);
+    return () => clearTimeout(t);
   }, [searchTerm]);
 
   // Fetch jobs
@@ -63,19 +66,11 @@ const JobListings = () => {
       if (locationFilter) params.location = locationFilter;
       const { data } = await jobService.getAll(params);
       if (Array.isArray(data)) {
-        setJobs(data);
-        setTotalPages(1);
-        setTotalJobs(data.length);
+        setJobs(data); setTotalPages(1); setTotalJobs(data.length);
       } else {
-        setJobs(data.jobs || []);
-        setTotalPages(data.pages || 1);
-        setTotalJobs(data.total || 0);
+        setJobs(data.jobs || []); setTotalPages(data.pages || 1); setTotalJobs(data.total || 0);
       }
-    } catch {
-      setJobs([]);
-    } finally {
-      setLoading(false);
-    }
+    } catch { setJobs([]); } finally { setLoading(false); }
   }, [search, typeFilter, locationFilter, page]);
 
   useEffect(() => { fetchJobs(); }, [fetchJobs]);
@@ -84,33 +79,32 @@ const JobListings = () => {
   useEffect(() => {
     if (user?.role === 'student') {
       applicationService.getMyApplications().then(({ data }) => {
-        setAppliedJobs(data.map((a) => a.job?._id));
+        setAppliedJobs(data.map(a => a.job?._id));
       });
     }
   }, [user]);
 
-  // Fetch bookmarks for students
   useEffect(() => {
     if (user?.role === 'student') {
-      jobService.getBookmarkIds().then(({ data }) => {
-        setBookmarkedJobs(data);
-      }).catch(() => { });
+      jobService.getBookmarkIds().then(({ data }) => setBookmarkedJobs(data)).catch(() => { });
     }
   }, [user]);
+
+  const showToast = (text, type = 'success') => {
+    setToast({ text, type });
+    setTimeout(() => setToast({ text: '', type: '' }), 3500);
+  };
 
   const handleApply = async (jobId) => {
     if (!user) return;
     setApplying(jobId);
-    setMessage({ text: '', type: '' });
     try {
       await applicationService.apply(jobId);
-      setAppliedJobs([...appliedJobs, jobId]);
-      setMessage({ text: 'Applied successfully!', type: 'success' });
+      setAppliedJobs(prev => [...prev, jobId]);
+      showToast('Application submitted successfully! 🎉');
     } catch (err) {
-      setMessage({ text: err.response?.data?.message || 'Failed to apply', type: 'danger' });
-    } finally {
-      setApplying(null);
-    }
+      showToast(err.response?.data?.message || 'Failed to apply', 'danger');
+    } finally { setApplying(null); }
   };
 
   const handleBookmark = async (jobId) => {
@@ -119,27 +113,19 @@ const JobListings = () => {
     try {
       const { data } = await jobService.toggleBookmark(jobId);
       if (data.bookmarked) {
-        setBookmarkedJobs([...bookmarkedJobs, jobId]);
-        setMessage({ text: 'Job saved to bookmarks!', type: 'success' });
+        setBookmarkedJobs(prev => [...prev, jobId]);
+        showToast('Job saved to bookmarks!');
       } else {
-        setBookmarkedJobs(bookmarkedJobs.filter((id) => id !== jobId));
-        setMessage({ text: 'Bookmark removed', type: 'success' });
+        setBookmarkedJobs(prev => prev.filter(id => id !== jobId));
+        showToast('Bookmark removed');
       }
     } catch (err) {
-      setMessage({ text: err.response?.data?.message || 'Failed to bookmark', type: 'danger' });
-    } finally {
-      setBookmarking(null);
-    }
+      showToast(err.response?.data?.message || 'Failed to bookmark', 'danger');
+    } finally { setBookmarking(null); }
   };
 
   const hasFilters = search || typeFilter || locationFilter;
-
-  const clearFilters = () => {
-    setSearchTerm('');
-    setSearch('');
-    setTypeFilter('');
-    setLocationFilter('');
-  };
+  const clearFilters = () => { setSearchTerm(''); setSearch(''); setTypeFilter(''); setLocationFilter(''); };
 
   const timeAgo = (date) => {
     if (!date) return '';
@@ -152,350 +138,319 @@ const JobListings = () => {
   };
 
   return (
-    <div className="jobs-page">
-      {/* ── Header ── */}
-      <div className="jobs-header">
-        <div className="jobs-header-left">
-          <div className="jobs-header-icon">
-            <FaBriefcase size={22} />
+    <div className="phd-page">
+
+      {/* ═══ HERO ═══ */}
+      <div className="phd-hero" style={{ paddingBottom: '32px' }}>
+        <div className="phd-hero-bg" />
+        <div className="phd-hero-content">
+          <div className="phd-hero-left">
+            <div className="phd-hero-icon"><FaRocket size={24} /></div>
+            <div>
+              <h1 className="phd-hero-title">Browse Opportunities</h1>
+              <p className="phd-hero-sub">
+                {loading ? 'Loading jobs…' : `Discover ${totalJobs} job${totalJobs !== 1 ? 's' : ''} & internships tailored for you`}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="jobs-title">Browse Opportunities</h1>
-            <p className="jobs-subtitle">
-              Discover {totalJobs} job{totalJobs !== 1 ? 's' : ''} &amp; internships tailored for you
-            </p>
-          </div>
-        </div>
-        <div className="jobs-header-right">
+
+          {/* View mode toggle integrated into hero */}
           <div className="jobs-view-toggle">
             <button
               className={`jobs-view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-              onClick={() => setViewMode('grid')}
-              title="Grid view"
+              onClick={() => setViewMode('grid')} title="Grid view"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <rect x="1" y="1" width="6" height="6" rx="1" />
-                <rect x="9" y="1" width="6" height="6" rx="1" />
-                <rect x="1" y="9" width="6" height="6" rx="1" />
-                <rect x="9" y="9" width="6" height="6" rx="1" />
-              </svg>
+              <FaThLarge size={14} />
             </button>
             <button
               className={`jobs-view-btn ${viewMode === 'list' ? 'active' : ''}`}
-              onClick={() => setViewMode('list')}
-              title="List view"
+              onClick={() => setViewMode('list')} title="List view"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <rect x="1" y="2" width="14" height="3" rx="1" />
-                <rect x="1" y="7" width="14" height="3" rx="1" />
-                <rect x="1" y="12" width="14" height="3" rx="1" />
-              </svg>
+              <FaList size={14} />
             </button>
           </div>
         </div>
-      </div>
 
-      {/* ── Success/Error Banner ── */}
-      {message.text && (
-        <div className={`jobs-alert jobs-alert-${message.type}`}>
-          <span>{message.text}</span>
-          <button className="jobs-alert-close" onClick={() => setMessage({ text: '', type: '' })}>
-            <FaTimes size={12} />
-          </button>
-        </div>
-      )}
+        {/* ── Filter bar embedded in hero ── */}
+        <div className="jobs-filter-strip">
+          <div className="jobs-search-wrap">
+            <FaSearch className="jobs-search-icon" size={14} />
+            <input
+              type="text"
+              placeholder="Search jobs, companies, skills…"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button className="jobs-search-clear" onClick={() => { setSearchTerm(''); setSearch(''); }}>
+                <FaTimes size={11} />
+              </button>
+            )}
+          </div>
 
-      {/* ── Filter Bar ── */}
-      <div className="jobs-filters">
-        <div className="jobs-search">
-          <FaSearch className="jobs-search-icon" size={14} />
-          <input
-            type="text"
-            placeholder="Search jobs, companies, skills..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        <div className="jobs-filter-group">
-          <div className="jobs-select-wrap">
-            <FaSlidersH className="jobs-select-icon" size={12} />
-            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+          <div className="jobs-filter-wrap">
+            <FaSlidersH size={11} className="jobs-fil-icon" />
+            <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
               <option value="">All Types</option>
               <option value="internship">Internship</option>
               <option value="job">Full-time Job</option>
             </select>
+            <FaChevronDown size={9} className="jobs-fil-arrow" />
           </div>
 
-          <div className="jobs-select-wrap">
-            <FaMapMarkerAlt className="jobs-select-icon" size={12} />
+          <div className="jobs-filter-wrap">
+            <FaMapMarkerAlt size={11} className="jobs-fil-icon" />
             <input
               type="text"
-              placeholder="Location..."
+              placeholder="Location…"
               value={locationFilter}
-              onChange={(e) => setLocationFilter(e.target.value)}
+              onChange={e => setLocationFilter(e.target.value)}
               className="jobs-location-input"
             />
           </div>
-        </div>
 
-        {hasFilters && (
-          <button className="jobs-clear-btn" onClick={clearFilters}>
-            <FaTimes size={10} /> Clear
-          </button>
-        )}
-      </div>
-
-      {/* ── Results Info ── */}
-      <div className="jobs-results-bar">
-        <span className="jobs-results-count">
-          {loading ? 'Loading...' : `${totalJobs} result${totalJobs !== 1 ? 's' : ''} found`}
-        </span>
-        {hasFilters && !loading && (
-          <span className="jobs-results-filter-tag">
-            Filtered
-          </span>
-        )}
-      </div>
-
-      {/* ── Content ── */}
-      {loading ? (
-        <LoadingSpinner />
-      ) : jobs.length === 0 ? (
-        <div className="jobs-empty">
-          <div className="jobs-empty-icon">
-            <FaSearch size={32} />
-          </div>
-          <h5>No Opportunities Found</h5>
-          <p>Try adjusting your search or filters to discover more opportunities</p>
           {hasFilters && (
-            <button className="jobs-empty-btn" onClick={clearFilters}>
-              <FaTimes size={12} /> Clear Filters
+            <button className="jobs-clear-btn" onClick={clearFilters}>
+              <FaTimes size={10} /> Clear
             </button>
           )}
         </div>
-      ) : (
-        <>
-          {/* ── Job Cards ── */}
-          <div className={`jobs-grid ${viewMode === 'list' ? 'jobs-grid-list' : ''}`}>
-            {jobs.map((job) => {
-              const isExpired = job.deadline && new Date(job.deadline) < new Date();
-              const daysLeft = job.deadline
-                ? Math.ceil((new Date(job.deadline) - new Date()) / 86400000)
-                : null;
-              const isApplied = appliedJobs.includes(job._id);
-              const isBookmarked = bookmarkedJobs.includes(job._id);
-              const initial = (job.companyName || 'C')[0].toUpperCase();
 
-              return (
-                <div key={job._id} className={`jobs-card ${isExpired ? 'jobs-card-expired' : ''}`}>
-                  {/* Top badges row */}
-                  <div className="jobs-card-badges">
-                    <span className={`jobs-badge-type ${job.type === 'internship' ? 'jobs-badge-intern' : 'jobs-badge-ft'}`}>
-                      {job.type === 'internship' ? <><FaGraduationCap size={10} /> Internship</> : <><FaBriefcase size={10} /> Full-time</>}
-                    </span>
-                    {isExpired && <span className="jobs-badge-expired">Expired</span>}
-                    {!isExpired && daysLeft !== null && daysLeft <= 5 && (
-                      <span className="jobs-badge-urgent">
-                        <FaClock size={9} /> {daysLeft}d left
-                      </span>
-                    )}
-                    {isApplied && (
-                      <span className="jobs-badge-applied">
-                        <FaCheckCircle size={9} /> Applied
-                      </span>
-                    )}
-                    {/* Bookmark button */}
-                    {user?.role === 'student' && (
-                      <button
-                        className={`jobs-bookmark-btn ${isBookmarked ? 'bookmarked' : ''}`}
-                        onClick={() => handleBookmark(job._id)}
-                        disabled={bookmarking === job._id}
-                        title={isBookmarked ? 'Remove bookmark' : 'Save job'}
-                      >
-                        {bookmarking === job._id ? (
-                          <span className="jobs-btn-spinner" />
-                        ) : isBookmarked ? (
-                          <FaBookmark size={14} />
-                        ) : (
-                          <FaRegBookmark size={14} />
-                        )}
-                      </button>
-                    )}
-                  </div>
+        {/* ── Quick type chips ── */}
+        <div className="jobs-quick-chips">
+          {[{ label: 'All', val: '' }, { label: '🎓 Internships', val: 'internship' }, { label: '💼 Full-time', val: 'job' }].map(c => (
+            <button
+              key={c.val}
+              className={`jobs-chip ${typeFilter === c.val ? 'active' : ''}`}
+              onClick={() => setTypeFilter(c.val)}
+            >{c.label}</button>
+          ))}
+        </div>
+      </div>
 
-                  {/* Company + Title */}
-                  <div className="jobs-card-header">
-                    <div className="jobs-company-avatar">{initial}</div>
-                    <div className="jobs-card-header-info">
-                      <Link to={`/jobs/${job._id}`} className="jobs-card-title">
-                        {job.title}
-                      </Link>
-                      <span className="jobs-card-company">
-                        <FaBuilding size={10} /> {job.companyName}
-                      </span>
-                    </div>
-                  </div>
+      {/* ── Toast notification ── */}
+      {toast.text && (
+        <div className={`jobs-toast jobs-toast-${toast.type}`}>
+          {toast.type === 'success' ? <FaCheckCircle size={14} /> : <FaTimes size={14} />}
+          <span>{toast.text}</span>
+          <button onClick={() => setToast({ text: '', type: '' })}><FaTimes size={11} /></button>
+        </div>
+      )}
 
-                  {/* Description */}
-                  <p className="jobs-card-desc">
-                    {job.description?.substring(0, 110)}
-                    {job.description?.length > 110 ? '...' : ''}
-                  </p>
 
-                  {/* Meta */}
-                  <div className="jobs-card-meta">
-                    <span><FaMapMarkerAlt size={11} /> {job.location || 'Remote'}</span>
-                    <span><FaMoneyBillWave size={11} /> {job.salary || 'Competitive'}</span>
-                    {job.applicationCount !== undefined && (
-                      <span><FaUsers size={11} /> {job.applicationCount} applicants</span>
-                    )}
-                    {job.openings && job.openings > 1 && (
-                      <span><FaLayerGroup size={11} /> {job.openings} openings</span>
-                    )}
-                    {job.eligibilityCGPA > 0 && (
-                      <span><FaStar size={11} /> CGPA {job.eligibilityCGPA}+</span>
-                    )}
-                  </div>
-
-                  {/* Skills */}
-                  {job.skillsRequired?.length > 0 && (
-                    <div className="jobs-card-skills">
-                      {job.skillsRequired.slice(0, 4).map((skill, i) => (
-                        <span key={i} className="jobs-skill-tag">{skill}</span>
-                      ))}
-                      {job.skillsRequired.length > 4 && (
-                        <span className="jobs-skill-more">+{job.skillsRequired.length - 4}</span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Footer */}
-                  <div className="jobs-card-footer">
-                    {/* Timeline */}
-                    {(() => {
-                      const posted = timeAgo(job.createdAt) || 'Recently';
-                      if (!job.deadline) {
-                        return (
-                          <div className="jobs-card-timeline">
-                            <div className="jobs-tl-labels">
-                              <span className="jobs-tl-posted"><FaClock size={9} /> Posted {posted}</span>
-                              <span className="jobs-tl-status jobs-tl-open">Open</span>
-                            </div>
-                            <div className="jobs-tl-bar">
-                              <div className="jobs-tl-fill jobs-tl-green" style={{ width: '15%' }} />
-                            </div>
-                          </div>
-                        );
-                      }
-                      const totalMs = new Date(job.deadline) - new Date(job.createdAt);
-                      const elapsedMs = Date.now() - new Date(job.createdAt);
-                      const pct = Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100));
-                      const dleft = Math.ceil((new Date(job.deadline) - Date.now()) / 86400000);
-                      const colorClass = isExpired ? 'jobs-tl-red'
-                        : dleft <= 3 ? 'jobs-tl-red'
-                          : dleft <= 7 ? 'jobs-tl-orange'
-                            : dleft <= 14 ? 'jobs-tl-yellow'
-                              : 'jobs-tl-green';
-                      const dlLabel = isExpired ? 'Expired'
-                        : dleft === 0 ? 'Last day!'
-                          : dleft === 1 ? '1 day left'
-                            : `${dleft}d left`;
-                      return (
-                        <div className="jobs-card-timeline">
-                          <div className="jobs-tl-labels">
-                            <span className="jobs-tl-posted"><FaClock size={9} /> {posted}</span>
-                            <span className={`jobs-tl-status ${colorClass}`}>{dlLabel}</span>
-                          </div>
-                          <div className="jobs-tl-bar">
-                            <div className={`jobs-tl-fill ${colorClass}`} style={{ width: `${pct}%` }} />
-                          </div>
-                        </div>
-                      );
-                    })()}
-                    <div className="jobs-card-actions">
-                      <Link to={`/jobs/${job._id}`} className="jobs-btn-details">
-                        View Details <FaExternalLinkAlt size={10} />
-                      </Link>
-                      {user?.role === 'student' && !isApplied && (
-                        <button
-                          className="jobs-btn-apply"
-                          onClick={() => handleApply(job._id)}
-                          disabled={applying === job._id || isExpired}
-                        >
-                          {applying === job._id ? (
-                            <span className="jobs-btn-spinner" />
-                          ) : (
-                            <>Apply <FaArrowRight size={10} /></>
-                          )}
-                        </button>
-                      )}
-                      {!user && (
-                        <Link to="/login" className="jobs-btn-apply">
-                          Login to Apply <FaArrowRight size={10} />
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+      {/* ── Results bar ── */}
+      {!loading && (
+        <div className="jobs-results-bar">
+          <div className="jobs-results-left">
+            <span className="jobs-results-pill">
+              {totalJobs} {totalJobs === 1 ? 'Job' : 'Jobs'}
+            </span>
+            {hasFilters && (
+              <span className="jobs-filtered-tag"><FaFilter size={9} /> Filters active</span>
+            )}
           </div>
-
-          {/* ── Pagination ── */}
-          {totalPages > 1 && (
-            <div className="jobs-pagination">
-              <button
-                className="jobs-page-btn"
-                disabled={page <= 1}
-                onClick={() => setPage(page - 1)}
-              >
-                <FaChevronLeft size={12} /> Prev
-              </button>
-
-              <div className="jobs-page-numbers">
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter((p) => p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1))
-                  .map((p, idx, arr) => (
-                    <span key={p}>
-                      {idx > 0 && arr[idx - 1] !== p - 1 && (
-                        <span className="jobs-page-dots">...</span>
-                      )}
-                      <button
-                        className={`jobs-page-num ${p === page ? 'active' : ''}`}
-                        onClick={() => setPage(p)}
-                      >
-                        {p}
-                      </button>
-                    </span>
-                  ))}
-              </div>
-
-              <button
-                className="jobs-page-btn"
-                disabled={page >= totalPages}
-                onClick={() => setPage(page + 1)}
-              >
-                Next <FaChevronRight size={12} />
-              </button>
+          {totalJobs > 0 && (
+            <div className="jobs-results-right">
+              <span className="jobs-type-dot jobs-type-dot-intern" />
+              <span className="jobs-type-label">{jobs.filter(j => j.type === 'internship').length} Internships</span>
+              <span className="jobs-results-divider" />
+              <span className="jobs-type-dot jobs-type-dot-ft" />
+              <span className="jobs-type-label">{jobs.filter(j => j.type !== 'internship').length} Full-time</span>
             </div>
           )}
-        </>
-      )
-      }
+        </div>
+      )}
 
-      {/* ── Quick Tip ── */}
-      {
-        !loading && jobs.length > 0 && (
-          <div className="jobs-tip-bar">
-            <FaRegLightbulb size={14} />
-            <span>
-              <strong>Pro tip:</strong> Set up alerts to get notified when new jobs matching your skills are posted.
-            </span>
+
+      {/* ── Content ── */}
+      <div className="phd-content" style={{ paddingTop: 0 }}>
+        {loading ? (
+          <LoadingSpinner />
+        ) : jobs.length === 0 ? (
+          <div className="jobs-empty">
+            <div className="jobs-empty-icon"><FaSearch size={36} /></div>
+            <h4>No Opportunities Found</h4>
+            <p>Try adjusting your search or filters to discover more opportunities</p>
+            {hasFilters && (
+              <button className="jobs-empty-btn" onClick={clearFilters}>
+                <FaTimes size={12} /> Clear Filters
+              </button>
+            )}
           </div>
-        )
-      }
-    </div >
+        ) : (
+          <>
+            {/* ── Job Cards Grid ── */}
+            <div className={`jobs-grid ${viewMode === 'list' ? 'jobs-grid-list' : ''}`}>
+              {jobs.map((job, idx) => {
+                const isExpired = job.deadline && new Date(job.deadline) < new Date();
+                const daysLeft = job.deadline ? Math.ceil((new Date(job.deadline) - new Date()) / 86400000) : null;
+                const isApplied = appliedJobs.includes(job._id);
+                const isBookmarked = bookmarkedJobs.includes(job._id);
+                const initial = (job.companyName || 'C')[0].toUpperCase();
+                const hue = (job.companyName?.charCodeAt(0) || 65) * 9 % 360;
+
+                // Timeline bar
+                let pct = 0, tlLabel = 'Open', tlClass = 'jobs-tl-green';
+                if (job.deadline) {
+                  const totalMs = new Date(job.deadline) - new Date(job.createdAt);
+                  const elapsedMs = Date.now() - new Date(job.createdAt);
+                  pct = Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100));
+                  const dl = daysLeft;
+                  tlLabel = isExpired ? 'Expired' : dl === 0 ? 'Last day!' : dl === 1 ? '1d left' : `${dl}d left`;
+                  tlClass = isExpired || dl <= 3 ? 'jobs-tl-red' : dl <= 7 ? 'jobs-tl-orange' : dl <= 14 ? 'jobs-tl-yellow' : 'jobs-tl-green';
+                }
+
+                return (
+                  <div
+                    key={job._id}
+                    className={`jobs-card ${isExpired ? 'jobs-card-expired' : ''} ${isApplied ? 'jobs-card-applied' : ''}`}
+                    style={{
+                      animationDelay: `${(idx % 12) * 0.04}s`,
+                      '--card-accent': job.type === 'internship' ? 'linear-gradient(90deg,#7c3aed,#a78bfa)' : 'linear-gradient(90deg,#2563eb,#60a5fa)',
+                    }}
+                  >
+                    {/* ── Top Row: badges + bookmark ── */}
+                    <div className="jobs-card-top">
+                      <div className="jobs-badge-row">
+                        <span className={`jobs-badge ${job.type === 'internship' ? 'jobs-badge-intern' : 'jobs-badge-ft'}`}>
+                          {job.type === 'internship' ? <><FaGraduationCap size={10} /> Internship</> : <><FaBriefcase size={10} /> Full-time</>}
+                        </span>
+                        {isExpired && <span className="jobs-badge jobs-badge-expired">Expired</span>}
+                        {!isExpired && daysLeft !== null && daysLeft <= 5 && (
+                          <span className="jobs-badge jobs-badge-urgent"><FaClock size={9} /> {daysLeft}d left</span>
+                        )}
+                        {isApplied && <span className="jobs-badge jobs-badge-applied"><FaCheckCircle size={9} /> Applied</span>}
+                      </div>
+                      {user?.role === 'student' && (
+                        <button
+                          className={`jobs-bookmark-btn ${isBookmarked ? 'bookmarked' : ''}`}
+                          onClick={() => handleBookmark(job._id)}
+                          disabled={bookmarking === job._id}
+                          title={isBookmarked ? 'Remove bookmark' : 'Save job'}
+                        >
+                          {bookmarking === job._id
+                            ? <span className="jobs-btn-spinner" />
+                            : isBookmarked ? <FaBookmark size={14} /> : <FaRegBookmark size={14} />
+                          }
+                        </button>
+                      )}
+                    </div>
+
+                    {/* ── Company + Title ── */}
+                    <div className="jobs-card-body">
+                      <div className="jobs-company-row">
+                        <div
+                          className="jobs-avatar"
+                          style={{ background: `hsl(${hue},55%,92%)`, color: `hsl(${hue},55%,35%)` }}
+                        >
+                          {initial}
+                        </div>
+                        <div className="jobs-company-info">
+                          <Link to={`/jobs/${job._id}`} className="jobs-card-title">{job.title}</Link>
+                          <span className="jobs-card-company"><FaBuilding size={10} /> {job.companyName}</span>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <p className="jobs-card-desc">
+                        {job.description?.substring(0, viewMode === 'list' ? 180 : 110)}
+                        {job.description?.length > (viewMode === 'list' ? 180 : 110) ? '…' : ''}
+                      </p>
+
+                      {/* Meta pills */}
+                      <div className="jobs-meta-row">
+                        <span className="jobs-meta-pill"><FaMapMarkerAlt size={10} /> {job.location || 'Remote'}</span>
+                        <span className="jobs-meta-pill"><FaMoneyBillWave size={10} /> {job.salary || 'Competitive'}</span>
+                        {job.applicationCount !== undefined && (
+                          <span className="jobs-meta-pill"><FaUsers size={10} /> {job.applicationCount} applied</span>
+                        )}
+                        {job.openings > 1 && (
+                          <span className="jobs-meta-pill"><FaLayerGroup size={10} /> {job.openings} openings</span>
+                        )}
+                        {job.eligibilityCGPA > 0 && (
+                          <span className="jobs-meta-pill"><FaStar size={10} /> CGPA {job.eligibilityCGPA}+</span>
+                        )}
+                      </div>
+
+                      {/* Skill tags */}
+                      {job.skillsRequired?.length > 0 && (
+                        <div className="jobs-skills-row">
+                          {job.skillsRequired.slice(0, 4).map((s, i) => (
+                            <span key={i} className="jobs-skill-tag">{s}</span>
+                          ))}
+                          {job.skillsRequired.length > 4 && (
+                            <span className="jobs-skill-more">+{job.skillsRequired.length - 4}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* ── Footer: timeline + actions ── */}
+                    <div className="jobs-card-footer">
+                      <div className="jobs-timeline">
+                        <div className="jobs-tl-labels">
+                          <span className="jobs-tl-posted"><FaClock size={9} /> {timeAgo(job.createdAt) || 'Recently'}</span>
+                          <span className={`jobs-tl-badge ${tlClass}`}>{tlLabel}</span>
+                        </div>
+                        <div className="jobs-tl-track">
+                          <div className={`jobs-tl-fill ${tlClass}`} style={{ width: job.deadline ? `${pct}%` : '12%' }} />
+                        </div>
+                      </div>
+
+                      <div className="jobs-actions">
+                        <Link to={`/jobs/${job._id}`} className="jobs-btn-details">
+                          View <FaExternalLinkAlt size={10} />
+                        </Link>
+                        {user?.role === 'student' && !isApplied && (
+                          <button
+                            className="jobs-btn-apply"
+                            onClick={() => handleApply(job._id)}
+                            disabled={applying === job._id || isExpired}
+                          >
+                            {applying === job._id
+                              ? <span className="jobs-btn-spinner" />
+                              : <>Apply <FaArrowRight size={10} /></>
+                            }
+                          </button>
+                        )}
+                        {!user && (
+                          <Link to="/login" className="jobs-btn-apply">Login to Apply <FaArrowRight size={10} /></Link>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* ── Pagination ── */}
+            {totalPages > 1 && (
+              <div className="jobs-pagination">
+                <button className="jobs-page-btn" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
+                  <FaChevronLeft size={12} /> Prev
+                </button>
+                <div className="jobs-page-numbers">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1))
+                    .map((p, idx, arr) => (
+                      <span key={p}>
+                        {idx > 0 && arr[idx - 1] !== p - 1 && <span className="jobs-page-dots">…</span>}
+                        <button
+                          className={`jobs-page-num ${p === page ? 'active' : ''}`}
+                          onClick={() => setPage(p)}
+                        >{p}</button>
+                      </span>
+                    ))}
+                </div>
+                <button className="jobs-page-btn" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
+                  Next <FaChevronRight size={12} />
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
   );
 };
 

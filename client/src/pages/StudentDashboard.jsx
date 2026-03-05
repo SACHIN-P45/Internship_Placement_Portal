@@ -81,7 +81,7 @@ const StudentDashboard = () => {
       applicationService
         .getMyApplications()
         .then(({ data }) => setApplications(data))
-        .catch(() => {});
+        .catch(() => { });
     }
   }, [user]);
 
@@ -91,7 +91,7 @@ const StudentDashboard = () => {
       jobService
         .getBookmarkedJobs()
         .then(({ data }) => setSavedJobs(data))
-        .catch(() => {});
+        .catch(() => { });
     }
   }, [user]);
 
@@ -101,7 +101,7 @@ const StudentDashboard = () => {
       authService
         .getResumeHistory()
         .then(({ data }) => setResumes(data))
-        .catch(() => {});
+        .catch(() => { });
     }
   }, [user]);
 
@@ -130,8 +130,8 @@ const StudentDashboard = () => {
     profileCompletion >= 80
       ? 'linear-gradient(135deg, #22c55e, #16a34a)'
       : profileCompletion >= 50
-      ? 'linear-gradient(135deg, #f59e0b, #d97706)'
-      : 'linear-gradient(135deg, #ef4444, #dc2626)';
+        ? 'linear-gradient(135deg, #f59e0b, #d97706)'
+        : 'linear-gradient(135deg, #ef4444, #dc2626)';
 
   // Missing fields
   const missingFields = useMemo(() => {
@@ -232,481 +232,327 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="stu-dashboard">
-      {/* ---- Header ---- */}
-      <div className="stu-header">
-        <div className="stu-header-left">
-          <div className="stu-header-avatar">
-            {user?.name?.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <p className="stu-header-greeting">{getGreeting()}</p>
-            <h2 className="stu-header-name">{user?.name}</h2>
-            <div className="stu-header-meta">
-              {user?.department && (
-                <span><FaGraduationCap size={12} /> {user.department}</span>
-              )}
-              {user?.cgpa && (
-                <span><FaStar size={11} /> CGPA: {user.cgpa}</span>
-              )}
+    <div className="phd-page">
+
+      {/* ═══ HERO HEADER ═══ */}
+      <div className="phd-hero">
+        <div className="phd-hero-bg" />
+        <div className="phd-hero-content">
+          <div className="phd-hero-left">
+            <div className="phd-hero-icon">
+              <FaUserGraduate size={26} />
+            </div>
+            <div>
+              <h1 className="phd-hero-title">{getGreeting()}, {user?.name?.split(' ')[0]} 👋</h1>
+              <p className="phd-hero-sub">
+                {user?.department && <span><FaGraduationCap style={{ marginRight: 6 }} />{user.department}</span>}
+                {user?.cgpa && <span style={{ marginLeft: 14 }}><FaStar style={{ marginRight: 4 }} />CGPA: {user.cgpa}</span>}
+              </p>
             </div>
           </div>
-        </div>
-
-        {/* Profile Completion Ring */}
-        <div className="stu-completion-card">
-          <div className="stu-completion-ring">
-            <svg width="68" height="68" viewBox="0 0 68 68">
-              <circle cx="34" cy="34" r="28" fill="none" stroke="#e2e8f0" strokeWidth="5" />
-              <circle
-                cx="34" cy="34" r="28"
-                fill="none"
-                stroke={profileCompletion >= 80 ? '#22c55e' : profileCompletion >= 50 ? '#f59e0b' : '#ef4444'}
-                strokeWidth="5"
-                strokeLinecap="round"
-                strokeDasharray={`${(profileCompletion / 100) * 175.9} 175.9`}
-                transform="rotate(-90 34 34)"
-                style={{ transition: 'stroke-dasharray 0.6s ease' }}
-              />
-            </svg>
-            <span className="stu-completion-pct">{profileCompletion}%</span>
-          </div>
-          <div className="stu-completion-info">
-            <span className="stu-completion-label">Profile Complete</span>
-            {missingFields.length > 0 && (
-              <span className="stu-completion-hint">
-                Missing: {missingFields.map((f) => f.label).join(', ')}
+          {/* Profile ring sits inside hero right */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginBottom: '2px' }}>Profile</div>
+              <div style={{ fontSize: '0.75rem', color: profileCompletion < 100 ? '#fcd34d' : '#6ee7b7', fontWeight: 600 }}>
+                {profileCompletion === 100 ? '✓ Complete' : `${missingFields.length} field${missingFields.length > 1 ? 's' : ''} missing`}
+              </div>
+            </div>
+            <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
+              <svg width="60" height="60" viewBox="0 0 68 68">
+                <circle cx="34" cy="34" r="28" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" strokeWidth="5" />
+                <circle
+                  cx="34" cy="34" r="28"
+                  fill="none"
+                  stroke={profileCompletion >= 80 ? '#6ee7b7' : profileCompletion >= 50 ? '#fcd34d' : '#fca5a5'}
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  strokeDasharray={`${(profileCompletion / 100) * 175.9} 175.9`}
+                  transform="rotate(-90 34 34)"
+                  style={{ transition: 'stroke-dasharray 0.8s ease' }}
+                />
+              </svg>
+              <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, color: '#fff' }}>
+                {profileCompletion}%
               </span>
-            )}
+            </div>
+            <div className="phd-hero-date">
+              <FaCalendarAlt size={12} />
+              <span>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ---- Stat Cards ---- */}
-      <div className="stu-stats-grid">
-        {statCards.map((s, i) => (
-          <div key={i} className="stu-stat-card">
-            <div className="stu-stat-icon" style={{ background: s.bg, color: s.color }}>
-              <s.icon size={18} />
+      {/* ═══ STAT CARDS ═══ */}
+      <div className="phd-stats-row" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginTop: '24px' }}>
+        {[
+          { label: 'Applied', value: stats.total, icon: FaBriefcase, variant: 'blue' },
+          { label: 'Shortlisted', value: stats.shortlisted, icon: FaClock, variant: 'amber' },
+          { label: 'Selected', value: stats.selected, icon: FaTrophy, variant: 'green' },
+          { label: 'Saved Jobs', value: savedJobs.length, icon: FaBookmark, variant: 'violet' },
+        ].map((s, i) => (
+          <div key={i} className={`phd-stat-card phd-stat-${s.variant}`} style={{ animationDelay: `${i * 0.06}s` }}>
+            <div className="phd-stat-icon-wrap"><s.icon size={20} /></div>
+            <div className="phd-stat-content">
+              <span className="phd-stat-number">{s.value}</span>
+              <span className="phd-stat-text">{s.label}</span>
             </div>
-            <div className="stu-stat-info">
-              <div className="stu-stat-value">{s.value}</div>
-              <div className="stu-stat-label">{s.label}</div>
-            </div>
-            <div className="stu-stat-deco" style={{ background: s.color }} />
+            <div className="phd-stat-glow" />
           </div>
         ))}
       </div>
 
-      {/* ---- Main Grid ---- */}
-      <div className="stu-main-grid">
-        {/* LEFT COLUMN — Profile Form */}
-        <div className="stu-card">
-          <div className="stu-card-header">
-            <div className="stu-card-header-icon stu-icon-blue">
-              <FaEdit size={16} />
+      {/* ═══ MAIN CONTENT ═══ */}
+      <div className="phd-content">
+
+        {/* Top grid: Profile form (left) + Resume & Actions (right) */}
+        <div className="phd-charts-grid" style={{ gridTemplateColumns: '1.3fr 0.7fr' }}>
+
+          {/* Edit Profile */}
+          <div className="phd-card">
+            <div className="phd-card-header">
+              <div className="phd-card-icon phd-card-icon-blue"><FaEdit size={16} /></div>
+              <div>
+                <h3 className="phd-card-title">Edit Profile</h3>
+                <p className="phd-card-sub">Keep your information updated for recruiters</p>
+              </div>
             </div>
-            <div>
-              <h5 className="stu-card-title">Edit Profile</h5>
-              <p className="stu-card-sub">Keep your information updated for recruiters</p>
-            </div>
+            <form onSubmit={handleProfileUpdate} style={{ padding: '0 24px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="stu-form-group">
+                <label className="stu-label">Full Name</label>
+                <input className="stu-input" type="text" value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} />
+              </div>
+              <div className="stu-form-row">
+                <div className="stu-form-group">
+                  <label className="stu-label">Department</label>
+                  <input className="stu-input" type="text" value={profile.department} onChange={(e) => setProfile({ ...profile, department: e.target.value })} placeholder="e.g. Computer Science" />
+                </div>
+                <div className="stu-form-group">
+                  <label className="stu-label">CGPA</label>
+                  <input className="stu-input" type="number" step="0.01" min="0" max="10" value={profile.cgpa} onChange={(e) => setProfile({ ...profile, cgpa: e.target.value })} placeholder="e.g. 8.5" />
+                </div>
+              </div>
+              <div className="stu-form-group">
+                <label className="stu-label"><FaPhone size={10} style={{ marginRight: 4 }} />Phone</label>
+                <input className="stu-input" type="tel" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} placeholder="+91 XXXXX XXXXX" />
+              </div>
+              <div className="stu-form-group">
+                <label className="stu-label">Skills <span style={{ color: '#94a3b8', fontWeight: 400 }}>(comma-separated)</span></label>
+                <input className="stu-input" type="text" value={profile.skills} onChange={(e) => setProfile({ ...profile, skills: e.target.value })} placeholder="React, Node.js, MongoDB…" />
+                {profile.skills && (
+                  <div className="stu-skills-tags">
+                    {profile.skills.split(',').filter(Boolean).map((s, i) => <span key={i} className="stu-skill-tag">{s.trim()}</span>)}
+                  </div>
+                )}
+              </div>
+              <div className="stu-form-group">
+                <label className="stu-label"><FaInfoCircle size={10} style={{ marginRight: 4 }} />Bio</label>
+                <textarea className="stu-input stu-textarea" rows="3" value={profile.bio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} placeholder="Tell employers about yourself…" />
+              </div>
+              <button type="submit" className="stu-btn stu-btn-primary" disabled={saving}>
+                {saving ? <><span className="spinner-border spinner-border-sm" /> Saving…</> : <><FaCheckCircle size={13} /> Save Changes</>}
+              </button>
+            </form>
           </div>
 
-          <form onSubmit={handleProfileUpdate} className="stu-form">
-            <div className="stu-form-group">
-              <label className="stu-label">Full Name</label>
-              <input
-                className="stu-input"
-                type="text"
-                value={profile.name}
-                onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-              />
-            </div>
+          {/* Right: Resume + Quick Links */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-            <div className="stu-form-row">
-              <div className="stu-form-group">
-                <label className="stu-label">Department</label>
-                <input
-                  className="stu-input"
-                  type="text"
-                  value={profile.department}
-                  onChange={(e) => setProfile({ ...profile, department: e.target.value })}
-                  placeholder="e.g. Computer Science"
-                />
+            {/* Resume */}
+            <div className="phd-card">
+              <div className="phd-card-header">
+                <div className="phd-card-icon phd-card-icon-green"><FaFilePdf size={16} /></div>
+                <div><h3 className="phd-card-title">Resume</h3><p className="phd-card-sub">PDF only · max 5MB</p></div>
               </div>
-              <div className="stu-form-group">
-                <label className="stu-label">CGPA</label>
-                <input
-                  className="stu-input"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="10"
-                  value={profile.cgpa}
-                  onChange={(e) => setProfile({ ...profile, cgpa: e.target.value })}
-                  placeholder="0.00 — 10.00"
-                />
-              </div>
-            </div>
-
-            <div className="stu-form-group">
-              <label className="stu-label"><FaPhone size={10} className="me-1" /> Phone</label>
-              <input
-                className="stu-input"
-                type="tel"
-                value={profile.phone}
-                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                placeholder="+91 XXXXX XXXXX"
-              />
-            </div>
-
-            <div className="stu-form-group">
-              <label className="stu-label">Skills</label>
-              <input
-                className="stu-input"
-                type="text"
-                value={profile.skills}
-                onChange={(e) => setProfile({ ...profile, skills: e.target.value })}
-                placeholder="React, Node.js, MongoDB…"
-              />
-              {profile.skills && (
-                <div className="stu-skills-tags">
-                  {profile.skills.split(',').filter(Boolean).map((s, i) => (
-                    <span key={i} className="stu-skill-tag">{s.trim()}</span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="stu-form-group">
-              <label className="stu-label"><FaInfoCircle size={10} className="me-1" /> Bio</label>
-              <textarea
-                className="stu-input stu-textarea"
-                rows="3"
-                value={profile.bio}
-                onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                placeholder="Tell employers about yourself…"
-              />
-            </div>
-
-            <button type="submit" className="stu-btn stu-btn-primary" disabled={saving}>
-              {saving ? (
-                <><span className="spinner-border spinner-border-sm" /> Saving…</>
-              ) : (
-                <><FaCheckCircle size={14} /> Save Changes</>
-              )}
-            </button>
-          </form>
-        </div>
-
-        {/* RIGHT COLUMN */}
-        <div className="stu-right-col">
-          {/* Resume Card */}
-          <div className="stu-card">
-            <div className="stu-card-header">
-              <div className="stu-card-header-icon stu-icon-green">
-                <FaFilePdf size={16} />
-              </div>
-              <div>
-                <h5 className="stu-card-title">Resume</h5>
-                <p className="stu-card-sub">Upload your latest resume (PDF)</p>
-              </div>
-            </div>
-
-            {resumes.length > 0 ? (
-              <div className="stu-resume-section">
-                <div className="stu-resume-current">
-                  <div className="stu-resume-file-icon">
-                    <FaFilePdf size={20} />
+              <div style={{ padding: '0 20px 20px' }}>
+                {resumes.length > 0 ? (
+                  <div className="stu-resume-current" style={{ marginBottom: '12px' }}>
+                    <div className="stu-resume-file-icon"><FaFilePdf size={20} /></div>
+                    <div className="stu-resume-file-info">
+                      <span className="stu-resume-file-name">{resumes.find(r => r.isActive)?.originalFileName || 'Resume'}</span>
+                      <span className="stu-resume-file-status"><FaCheckCircle size={10} /> Active</span>
+                    </div>
+                    <button className="stu-resume-view-btn" onClick={() => {
+                      const a = resumes.find(r => r.isActive);
+                      if (a) { setSelectedResumeId(a._id); setPdfViewerOpen(true); }
+                    }}>View <FaExternalLinkAlt size={10} /></button>
                   </div>
-                  <div className="stu-resume-file-info">
-                    <span className="stu-resume-file-name">{resumes.find(r => r.isActive)?.originalFileName || 'Resume'}</span>
-                    <span className="stu-resume-file-status"><FaCheckCircle size={10} /> Active</span>
+                ) : (
+                  <div className="stu-resume-alert" style={{ marginBottom: '12px' }}>
+                    <FaInfoCircle size={14} /><span>No resume uploaded yet.</span>
                   </div>
-                  <button
-                    className="stu-resume-view-btn"
-                    onClick={() => {
-                      const activeResume = resumes.find(r => r.isActive);
-                      console.log('Active resume:', activeResume);
-                      if (activeResume) {
-                        setSelectedResumeId(activeResume._id);
-                        setPdfViewerOpen(true);
-                      }
-                    }}
-                  >
-                    View <FaExternalLinkAlt size={10} />
-                  </button>
-                </div>
+                )}
 
+                {/* Dropzone */}
+                <div
+                  className={`stu-dropzone ${dragActive ? 'active' : ''} ${resumeFile ? 'has-file' : ''}`}
+                  onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
+                  onClick={() => fileRef.current?.click()}
+                >
+                  <input ref={fileRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setResumeFile(e.target.files[0])} />
+                  {resumeFile ? (
+                    <div className="stu-dropzone-file">
+                      <FaFilePdf size={20} className="text-danger" />
+                      <span>{resumeFile.name}</span>
+                      <button type="button" className="stu-dropzone-remove" onClick={(e) => { e.stopPropagation(); setResumeFile(null); }}><FaTimes size={12} /></button>
+                    </div>
+                  ) : (
+                    <>
+                      <FaCloudUploadAlt size={26} className="stu-dropzone-icon" />
+                      <span className="stu-dropzone-text">Drag & drop or click</span>
+                      <span className="stu-dropzone-hint">PDF only · max 5MB</span>
+                    </>
+                  )}
+                </div>
+                <button className="stu-btn stu-btn-green" onClick={handleResumeUpload} disabled={!resumeFile || uploading}>
+                  {uploading ? <><span className="spinner-border spinner-border-sm" /> Uploading…</> : <><FaUpload size={13} /> Upload Resume</>}
+                </button>
+
+                {/* History */}
                 {resumes.length > 1 && (
-                  <div className="stu-resume-history">
-                    <h6>Resume History</h6>
-                    {resumes.map((resume) => (
-                      <div key={resume._id} className="stu-resume-history-item">
-                        <span>{resume.originalFileName}</span>
-                        <span className="stu-resume-date">
-                          {new Date(resume.uploadedAt).toLocaleDateString()}
-                        </span>
-                        <div className="stu-resume-history-actions">
-                          <button
-                            className="stu-resume-history-btn"
-                            onClick={() => {
-                              setSelectedResumeId(resume._id);
-                              setPdfViewerOpen(true);
-                            }}
-                          >
-                            View
-                          </button>
-                          {!resume.isActive && (
-                            <button
-                              className="stu-resume-history-btn"
-                              onClick={async () => {
-                                try {
-                                  await authService.activateResume(resume._id);
-                                  const { data } = await authService.getResumeHistory();
-                                  setResumes(data);
-                                  await refreshUser();
-                                  toast.success('Resume activated!');
-                                } catch {
-                                  toast.error('Failed to activate resume');
-                                }
-                              }}
-                            >
-                              Activate
-                            </button>
-                          )}
-                          {!resume.isActive && (
-                            <button
-                              className="stu-resume-history-btn delete"
-                              onClick={async () => {
-                                try {
-                                  await authService.deleteResume(resume._id);
-                                  const { data } = await authService.getResumeHistory();
-                                  setResumes(data);
-                                  toast.success('Resume deleted!');
-                                } catch {
-                                  toast.error('Failed to delete resume');
-                                }
-                              }}
-                            >
-                              Delete
-                            </button>
-                          )}
+                  <div style={{ marginTop: '12px' }}>
+                    <p style={{ fontSize: '0.78rem', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>VERSION HISTORY</p>
+                    {resumes.map(r => (
+                      <div key={r._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderTop: '1px solid #f1f5f9' }}>
+                        <span style={{ fontSize: '0.78rem', color: '#475569' }}>{r.originalFileName}</span>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button className="stu-view-all-btn" style={{ padding: '3px 8px', fontSize: '0.7rem' }} onClick={() => { setSelectedResumeId(r._id); setPdfViewerOpen(true); }}>View</button>
+                          {!r.isActive && <button className="stu-view-all-btn" style={{ padding: '3px 8px', fontSize: '0.7rem', background: '#f0fdf4', color: '#16a34a' }} onClick={async () => { try { await authService.activateResume(r._id); const { data } = await authService.getResumeHistory(); setResumes(data); await refreshUser(); toast.success('Activated!'); } catch { toast.error('Failed'); } }}>Set Active</button>}
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="phd-card">
+              <div className="phd-card-header">
+                <div className="phd-card-icon phd-card-icon-indigo"><FaRocket size={16} /></div>
+                <div><h3 className="phd-card-title">Quick Actions</h3></div>
+              </div>
+              <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <Link to="/jobs" className="stu-action-link">
+                  <div className="stu-action-icon" style={{ background: '#eff6ff', color: '#3b82f6' }}><FaBriefcase size={16} /></div>
+                  <div><span className="stu-action-label">Browse Jobs</span><span className="stu-action-desc">Find new opportunities</span></div>
+                  <FaArrowRight size={12} className="stu-action-arrow" />
+                </Link>
+                <Link to="/applications" className="stu-action-link">
+                  <div className="stu-action-icon" style={{ background: '#f5f3ff', color: '#6366f1' }}><FaFileAlt size={16} /></div>
+                  <div><span className="stu-action-label">My Applications</span><span className="stu-action-desc">Track your progress</span></div>
+                  <FaArrowRight size={12} className="stu-action-arrow" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Bottom row: Recent Applications + Saved Jobs ── */}
+        <div className="phd-charts-grid" style={{ marginTop: '24px' }}>
+
+          {/* Recent Applications */}
+          <div className="phd-card">
+            <div className="phd-card-header">
+              <div className="phd-card-icon phd-card-icon-indigo"><FaChartLine size={16} /></div>
+              <div>
+                <h3 className="phd-card-title">Recent Applications</h3>
+                <p className="phd-card-sub">Your latest {Math.min(applications.length, 5)} applications</p>
+              </div>
+              {applications.length > 0 && (
+                <Link to="/applications" className="phd-card-badge" style={{ textDecoration: 'none' }}>View All <FaArrowRight size={10} style={{ marginLeft: 4 }} /></Link>
+              )}
+            </div>
+            {applications.length > 0 ? (
+              <div className="phd-table-wrap">
+                <table className="phd-table">
+                  <thead><tr><th>#</th><th>Company</th><th>Role</th><th>Date</th><th className="phd-th-right">Status</th></tr></thead>
+                  <tbody>
+                    {applications.slice(0, 5).map((app, i) => (
+                      <tr key={app._id} className="phd-tr" style={{ animationDelay: `${i * 0.03}s` }}>
+                        <td className="phd-td-rank"><span className="phd-rank-num">{i + 1}</span></td>
+                        <td>
+                          <div className="phd-company-cell">
+                            <div className="phd-company-dot" style={{ background: `hsl(${(app.job?.companyName?.charCodeAt(0) || 65) * 9 % 360},55%,92%)`, color: `hsl(${(app.job?.companyName?.charCodeAt(0) || 65) * 9 % 360},55%,35%)` }}>{app.job?.companyName?.[0]?.toUpperCase() || 'C'}</div>
+                            <span style={{ fontWeight: 600, color: '#1e293b' }}>{app.job?.companyName}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="phd-position-cell">
+                            <span className="phd-position-title">{app.job?.title}</span>
+                            <span className={`phd-type-badge ${app.job?.type === 'internship' ? 'intern' : 'ft'}`}>{app.job?.type === 'internship' ? '🎓 Internship' : '💼 Full-time'}</span>
+                          </div>
+                        </td>
+                        <td style={{ color: '#64748b', fontSize: '0.82rem' }}>{formatDate(app.createdAt)}</td>
+                        <td className="phd-td-right"><StatusBadge status={app.status} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
-              <div className="stu-resume-alert">
-                <FaInfoCircle size={14} />
-                <span>No resume uploaded yet. Upload one to apply for jobs.</span>
+              <div style={{ padding: '20px 24px', color: '#94a3b8', fontSize: '0.9rem' }}>
+                No applications yet. <Link to="/jobs" style={{ color: '#6366f1', fontWeight: 600 }}>Browse jobs →</Link>
               </div>
             )}
-
-            {/* Drag & drop zone */}
-            <div
-              className={`stu-dropzone ${dragActive ? 'active' : ''} ${resumeFile ? 'has-file' : ''}`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              onClick={() => fileRef.current?.click()}
-            >
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".pdf"
-                style={{ display: 'none' }}
-                onChange={(e) => setResumeFile(e.target.files[0])}
-              />
-              {resumeFile ? (
-                <div className="stu-dropzone-file">
-                  <FaFilePdf size={20} className="text-danger" />
-                  <span>{resumeFile.name}</span>
-                  <button
-                    type="button"
-                    className="stu-dropzone-remove"
-                    onClick={(e) => { e.stopPropagation(); setResumeFile(null); }}
-                  >
-                    <FaTimes size={12} />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <FaCloudUploadAlt size={28} className="stu-dropzone-icon" />
-                  <span className="stu-dropzone-text">Drag & drop or click to browse</span>
-                  <span className="stu-dropzone-hint">PDF only, max 5MB</span>
-                </>
-              )}
-            </div>
-
-            <button
-              className="stu-btn stu-btn-green"
-              onClick={handleResumeUpload}
-              disabled={!resumeFile || uploading}
-            >
-              {uploading ? (
-                <><span className="spinner-border spinner-border-sm" /> Uploading…</>
-              ) : (
-                <><FaUpload size={13} /> Upload Resume</>
-              )}
-            </button>
           </div>
 
-          {/* Quick Actions */}
-          <div className="stu-card stu-quick-actions">
-            <h5 className="stu-card-title" style={{ marginBottom: 16 }}>
-              <FaRocket size={14} className="me-2" style={{ color: '#6366f1' }} />
-              Quick Actions
-            </h5>
-            <Link to="/jobs" className="stu-action-link">
-              <div className="stu-action-icon" style={{ background: '#eff6ff', color: '#3b82f6' }}>
-                <FaBriefcase size={16} />
-              </div>
+          {/* Saved Jobs */}
+          <div className="phd-card">
+            <div className="phd-card-header">
+              <div className="phd-card-icon phd-card-icon-purple"><FaBookmark size={16} /></div>
               <div>
-                <span className="stu-action-label">Browse Jobs</span>
-                <span className="stu-action-desc">Find new opportunities</span>
+                <h3 className="phd-card-title">Saved Jobs</h3>
+                <p className="phd-card-sub">Jobs you've bookmarked</p>
               </div>
-              <FaArrowRight size={12} className="stu-action-arrow" />
-            </Link>
-            <Link to="/applications" className="stu-action-link">
-              <div className="stu-action-icon" style={{ background: '#f5f3ff', color: '#6366f1' }}>
-                <FaFileAlt size={16} />
-              </div>
-              <div>
-                <span className="stu-action-label">My Applications</span>
-                <span className="stu-action-desc">Track your progress</span>
-              </div>
-              <FaArrowRight size={12} className="stu-action-arrow" />
-            </Link>
-          </div>
-
-          {/* Tip Card */}
-          <div className="stu-tip-card">
-            <FaLightbulb size={16} className="stu-tip-icon" />
-            <div>
-              <strong>Pro Tip</strong>
-              <p>Profiles with a resume, bio, and skills get 3x more views from recruiters!</p>
+              {savedJobs.length > 0 && (
+                <Link to="/jobs" className="phd-card-badge" style={{ textDecoration: 'none' }}>Browse More <FaArrowRight size={10} style={{ marginLeft: 4 }} /></Link>
+              )}
             </div>
+            {savedJobs.length > 0 ? (
+              <div className="phd-table-wrap">
+                <table className="phd-table">
+                  <thead><tr><th>Company</th><th>Role</th><th className="phd-th-right">Remove</th></tr></thead>
+                  <tbody>
+                    {savedJobs.slice(0, 5).map((job, i) => (
+                      <tr key={job._id} className="phd-tr" style={{ animationDelay: `${i * 0.03}s` }}>
+                        <td>
+                          <div className="phd-company-cell">
+                            <div className="phd-company-dot" style={{ background: `hsl(${(job.companyName?.charCodeAt(0) || 65) * 9 % 360},55%,92%)`, color: `hsl(${(job.companyName?.charCodeAt(0) || 65) * 9 % 360},55%,35%)` }}>{job.companyName?.[0]?.toUpperCase() || 'C'}</div>
+                            <Link to={`/jobs/${job._id}`} style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>{job.companyName}</Link>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="phd-position-cell">
+                            <Link to={`/jobs/${job._id}`} className="phd-position-title" style={{ textDecoration: 'none' }}>{job.title}</Link>
+                            <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}><FaMoneyBillWave size={10} />{job.salary || 'Competitive'}</span>
+                          </div>
+                        </td>
+                        <td className="phd-td-right">
+                          <button
+                            className="stu-dropzone-remove"
+                            onClick={() => handleRemoveBookmark(job._id)}
+                            disabled={removingBookmark === job._id}
+                            title="Remove bookmark"
+                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            {removingBookmark === job._id ? <span className="spinner-border spinner-border-sm" /> : <FaTrashAlt size={12} />}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div style={{ padding: '20px 24px', color: '#94a3b8', fontSize: '0.9rem' }}>
+                No saved jobs yet. <Link to="/jobs" style={{ color: '#6366f1', fontWeight: 600 }}>Find one →</Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
-
-      {/* ---- Recent Applications ---- */}
-      {applications.length > 0 && (
-        <div className="stu-card stu-recent-apps">
-          <div className="stu-card-header" style={{ marginBottom: 0, paddingBottom: 0, borderBottom: 'none' }}>
-            <div className="stu-card-header-icon stu-icon-purple">
-              <FaChartLine size={16} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <h5 className="stu-card-title">Recent Applications</h5>
-              <p className="stu-card-sub">Your latest {Math.min(applications.length, 5)} applications</p>
-            </div>
-            <Link to="/applications" className="stu-view-all-btn">
-              View All <FaArrowRight size={10} />
-            </Link>
-          </div>
-
-          <div className="stu-apps-list">
-            {applications.slice(0, 5).map((app) => (
-              <Link
-                key={app._id}
-                to={`/jobs/${app.job?._id}`}
-                className="stu-app-row"
-              >
-                <div className="stu-app-company-icon">
-                  {app.job?.companyName?.charAt(0).toUpperCase() || 'C'}
-                </div>
-                <div className="stu-app-info">
-                  <span className="stu-app-title">{app.job?.title}</span>
-                  <span className="stu-app-company">
-                    <FaBuilding size={10} className="me-1" />
-                    {app.job?.companyName}
-                  </span>
-                </div>
-                <div className="stu-app-date">
-                  <FaCalendarAlt size={10} />
-                  {formatDate(app.createdAt)}
-                </div>
-                <StatusBadge status={app.status} />
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ---- Saved Jobs ---- */}
-      {savedJobs.length > 0 && (
-        <div className="stu-card stu-saved-jobs">
-          <div className="stu-card-header" style={{ marginBottom: 0, paddingBottom: 0, borderBottom: 'none' }}>
-            <div className="stu-card-header-icon" style={{ background: '#f5f3ff', color: '#6366f1' }}>
-              <FaBookmark size={16} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <h5 className="stu-card-title">Saved Jobs</h5>
-              <p className="stu-card-sub">Jobs you've bookmarked for later</p>
-            </div>
-            <Link to="/jobs" className="stu-view-all-btn">
-              Browse More <FaArrowRight size={10} />
-            </Link>
-          </div>
-
-          <div className="stu-saved-grid">
-            {savedJobs.slice(0, 6).map((job) => {
-              const isExpired = job.deadline && new Date(job.deadline) < new Date();
-              return (
-                <div key={job._id} className={`stu-saved-card ${isExpired ? 'expired' : ''}`}>
-                  <div className="stu-saved-header">
-                    <div className="stu-saved-avatar">
-                      {job.companyName?.charAt(0).toUpperCase() || 'C'}
-                    </div>
-                    <div className="stu-saved-type">
-                      {job.type === 'internship' ? (
-                        <><FaGraduationCap size={10} /> Internship</>
-                      ) : (
-                        <><FaBriefcase size={10} /> Full-time</>
-                      )}
-                    </div>
-                    <button
-                      className="stu-saved-remove"
-                      onClick={() => handleRemoveBookmark(job._id)}
-                      disabled={removingBookmark === job._id}
-                      title="Remove bookmark"
-                    >
-                      {removingBookmark === job._id ? (
-                        <span className="spinner-border spinner-border-sm" />
-                      ) : (
-                        <FaTrashAlt size={12} />
-                      )}
-                    </button>
-                  </div>
-                  <Link to={`/jobs/${job._id}`} className="stu-saved-title">
-                    {job.title}
-                  </Link>
-                  <div className="stu-saved-company">
-                    <FaBuilding size={10} /> {job.companyName}
-                  </div>
-                  <div className="stu-saved-meta">
-                    <span><FaMapMarkerAlt size={10} /> {job.location || 'Remote'}</span>
-                    <span><FaMoneyBillWave size={10} /> {job.salary || 'Competitive'}</span>
-                  </div>
-                  {isExpired && (
-                    <div className="stu-saved-expired-badge">
-                      <FaClock size={10} /> Expired
-                    </div>
-                  )}
-                  <Link to={`/jobs/${job._id}`} className="stu-saved-view-btn">
-                    View Details <FaArrowRight size={10} />
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* PDF Viewer Modal */}
       <PDFViewer
@@ -720,3 +566,5 @@ const StudentDashboard = () => {
 };
 
 export default StudentDashboard;
+
+
