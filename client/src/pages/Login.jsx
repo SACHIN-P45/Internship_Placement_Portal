@@ -35,6 +35,8 @@ const Login = () => {
       setError('OAuth authentication failed. Please try again or use email login.');
     } else if (oauthError === 'blocked') {
       setError('Your account has been blocked. Please contact support.');
+    } else if (oauthError === 'company_oauth_not_allowed') {
+      setError('Company accounts cannot use Google or GitHub login. Please sign in with your email and password.');
     }
   }, [searchParams]);
 

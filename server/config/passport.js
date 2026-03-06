@@ -34,6 +34,10 @@ passport.use(
         let user = await User.findOne({ googleId: profile.id });
 
         if (user) {
+          // Block company accounts from using OAuth
+          if (user.role === 'company') {
+            return done(new Error('company_oauth_not_allowed'), null);
+          }
           return done(null, user);
         }
 
@@ -41,6 +45,10 @@ passport.use(
         user = await User.findOne({ email: profile.emails[0].value });
 
         if (user) {
+          // Block company accounts from using OAuth
+          if (user.role === 'company') {
+            return done(new Error('company_oauth_not_allowed'), null);
+          }
           // Link Google account to existing user
           user.googleId = profile.id;
           if (!user.avatar && profile.photos?.[0]?.value) {
@@ -91,6 +99,10 @@ passport.use(
 
         if (user) {
           console.log('[GitHub OAuth] Existing user found by githubId:', user.email);
+          // Block company accounts from using OAuth
+          if (user.role === 'company') {
+            return done(new Error('company_oauth_not_allowed'), null);
+          }
           return done(null, user);
         }
 
@@ -102,6 +114,10 @@ passport.use(
         user = await User.findOne({ email });
 
         if (user) {
+          // Block company accounts from using OAuth
+          if (user.role === 'company') {
+            return done(new Error('company_oauth_not_allowed'), null);
+          }
           // Link GitHub account to existing user
           console.log('[GitHub OAuth] Linking GitHub to existing user:', user.email);
           user.githubId = profile.id;

@@ -79,7 +79,7 @@ const OAuthCallback = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #3b82f6 70%, #06b6d4 100%);
           padding: 1rem;
         }
         .oauth-callback-card {
@@ -94,7 +94,7 @@ const OAuthCallback = () => {
           width: 50px;
           height: 50px;
           border: 4px solid #e5e7eb;
-          border-top-color: #667eea;
+          border-top-color: #3b82f6;
           border-radius: 50%;
           margin: 0 auto 1.5rem;
           animation: spin 1s linear infinite;
@@ -102,6 +102,7 @@ const OAuthCallback = () => {
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
+
         .oauth-error-icon {
           width: 60px;
           height: 60px;

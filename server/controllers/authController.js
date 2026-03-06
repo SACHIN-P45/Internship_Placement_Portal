@@ -11,7 +11,17 @@ const { sendPasswordResetEmail } = require('../utils/emailService');
 // @route   POST /api/auth/register
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role, companyName, website, description } = req.body;
+    const { name, email, password, role, companyName, website, description, googleId, githubId } = req.body;
+
+    // Companies cannot register via OAuth
+    if (role === 'company' && (googleId || githubId)) {
+      return res.status(400).json({ message: 'Company accounts must be registered with email and password only' });
+    }
+
+    // Validate password is provided for email registrations
+    if (!password) {
+      return res.status(400).json({ message: 'Password is required' });
+    }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -463,6 +473,12 @@ exports.oauthCallback = async (req, res, next) => {
     if (user.isBlocked) {
       console.log('[OAuth Callback] User is blocked, redirecting to login');
       return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3001'}/login?error=blocked`);
+    }
+
+    // Company accounts cannot use OAuth — email registration only
+    if (user.role === 'company') {
+      console.log('[OAuth Callback] Company account attempted OAuth login, rejecting');
+      return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3001'}/login?error=company_oauth_not_allowed`);
     }
 
     // Generate JWT token
