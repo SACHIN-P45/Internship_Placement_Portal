@@ -1,13 +1,19 @@
 // Email service for sending password reset emails
 const nodemailer = require('nodemailer');
 
-// Create transporter using Gmail
+// Create transporter using Gmail with explicit host configuration
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD,
   },
+  tls: {
+    // do not fail on invalid certs (sometimes required for free hosting platforms)
+    rejectUnauthorized: false
+  }
 });
 
 /**
