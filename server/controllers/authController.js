@@ -345,7 +345,7 @@ exports.forgotPassword = async (req, res, next) => {
     await user.save();
 
     // Send reset email
-    let resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    let resetLink = `${process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://internship-placement-portal-kappa.vercel.app'}/reset-password/${resetToken}`;
 
     try {
       await sendPasswordResetEmail(user.email, resetToken, user.name);
@@ -472,13 +472,13 @@ exports.oauthCallback = async (req, res, next) => {
     // Block check
     if (user.isBlocked) {
       console.log('[OAuth Callback] User is blocked, redirecting to login');
-      return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3001'}/login?error=blocked`);
+      return res.redirect(`${process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://internship-placement-portal-kappa.vercel.app'}/login?error=blocked`);
     }
 
     // Company accounts cannot use OAuth — email registration only
     if (user.role === 'company') {
       console.log('[OAuth Callback] Company account attempted OAuth login, rejecting');
-      return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3001'}/login?error=company_oauth_not_allowed`);
+      return res.redirect(`${process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://internship-placement-portal-kappa.vercel.app'}/login?error=company_oauth_not_allowed`);
     }
 
     // Generate JWT token
@@ -497,11 +497,11 @@ exports.oauthCallback = async (req, res, next) => {
 
     // Redirect to frontend with encoded user data
     const encodedData = encodeURIComponent(JSON.stringify(userData));
-    const redirectUrl = `${process.env.CLIENT_URL || 'http://localhost:3001'}/oauth/callback?data=${encodedData}`;
+    const redirectUrl = `${process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://internship-placement-portal-kappa.vercel.app'}/oauth/callback?data=${encodedData}`;
     console.log('[OAuth Callback] Redirecting to:', redirectUrl.substring(0, 100) + '...');
     res.redirect(redirectUrl);
   } catch (error) {
     console.error('[OAuth Callback] Error:', error.message);
-    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3001'}/login?error=oauth_failed`);
+    res.redirect(`${process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://internship-placement-portal-kappa.vercel.app'}/login?error=oauth_failed`);
   }
 };

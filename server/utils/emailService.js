@@ -18,7 +18,8 @@ const transporter = nodemailer.createTransport({
  */
 exports.sendPasswordResetEmail = async (email, resetToken, userName) => {
   try {
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://internship-placement-portal-kappa.vercel.app';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f5f5f5; padding: 20px; border-radius: 8px;">
@@ -113,7 +114,7 @@ exports.sendWelcomeEmail = async (email, userName) => {
           </p>
           
           <div style="margin: 30px 0; text-align: center;">
-            <a href="${process.env.FRONTEND_URL}/login" style="background-color: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+            <a href="${process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://internship-placement-portal-kappa.vercel.app'}/login" style="background-color: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
               Go to Login
             </a>
           </div>
@@ -142,7 +143,7 @@ exports.sendWelcomeEmail = async (email, userName) => {
       console.log(`To: ${email}`);
       console.log(`Subject: ${mailOptions.subject}`);
       console.log('-'.repeat(60));
-      console.log(`Login URL: ${process.env.FRONTEND_URL}/login`);
+      console.log(`Login URL: ${process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://internship-placement-portal-kappa.vercel.app'}/login`);
       console.log('-'.repeat(60));
       console.log('(In production, this would be sent via email)\n');
     }
@@ -155,7 +156,7 @@ exports.sendWelcomeEmail = async (email, userName) => {
       console.warn(`⚠️  Could not send email via SMTP: ${smtpError.message}`);
       console.log(`📌 Welcome email information available in console output above`);
     }
-    
+
     return true;
   } catch (error) {
     console.error('❌ Error preparing welcome email:', error);

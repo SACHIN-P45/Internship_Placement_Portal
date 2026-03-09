@@ -44,7 +44,7 @@ router.delete('/resume/:resumeId', protect, authorize('student'), deleteResume);
 
 // Helper: build client-side failure URL
 const getFailureRedirect = () =>
-  `${process.env.CLIENT_URL || 'http://localhost:3001'}/login?error=oauth_failed`;
+  `${process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://internship-placement-portal-kappa.vercel.app'}/login?error=oauth_failed`;
 
 // ============ Google OAuth ============
 router.get(
