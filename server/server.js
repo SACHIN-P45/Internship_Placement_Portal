@@ -86,6 +86,33 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// Root route welcome message (fixes "Cannot GET /" in browser)
+app.get('/', (req, res) => {
+  res.status(200).send(`
+    <html>
+      <head>
+        <title>Internship Placement Portal API</title>
+        <style>
+          body { font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc; color: #0f172a; }
+          .container { text-align: center; background: white; padding: 3rem; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+          h1 { color: #4f46e5; margin-bottom: 0.5rem; }
+          p { color: #64748b; margin-top: 0; }
+          .badge { display: inline-block; padding: 0.25rem 0.75rem; background: #dcfce7; color: #166534; border-radius: 9999px; font-weight: 600; font-size: 0.875rem; margin-top: 1rem; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>🚀 Placement Portal API</h1>
+          <p>The backend server is running successfully!</p>
+          <div class="badge">System Online V1.0.0</div>
+          <br/><br/>
+          <a href="/api/health" style="color: #6366f1; text-decoration: none; font-size: 0.9rem;">View Health Check &rarr;</a>
+        </div>
+      </body>
+    </html>
+  `);
+});
+
 // --------------- Error Handler ---------------
 app.use(errorHandler);
 
