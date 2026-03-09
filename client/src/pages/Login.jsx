@@ -170,7 +170,7 @@ const Login = () => {
           {/* OAuth Buttons */}
           <div className="login-oauth">
             <a
-              href={`${API_BASE_URL}/auth/google`}
+              href={`${API_BASE_URL}/auth/google/callback`}
               className="login-oauth-btn login-oauth-google"
             >
               <svg className="login-oauth-icon" viewBox="0 0 24 24">
@@ -183,7 +183,7 @@ const Login = () => {
             </a>
 
             <a
-              href={`${API_BASE_URL}/auth/github`}
+              href={`${API_BASE_URL}/auth/github/callback`}
               className="login-oauth-btn login-oauth-github"
             >
               <FaGithub className="login-oauth-icon" />
