@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../services/api';
 import {
   FaEnvelope,
   FaLock,
@@ -169,7 +170,7 @@ const Login = () => {
           {/* OAuth Buttons */}
           <div className="login-oauth">
             <a
-              href="http://localhost:5000/api/auth/google"
+              href={`${API_BASE_URL}/auth/google`}
               className="login-oauth-btn login-oauth-google"
             >
               <svg className="login-oauth-icon" viewBox="0 0 24 24">
@@ -182,7 +183,7 @@ const Login = () => {
             </a>
 
             <a
-              href="http://localhost:5000/api/auth/github"
+              href={`${API_BASE_URL}/auth/github`}
               className="login-oauth-btn login-oauth-github"
             >
               <FaGithub className="login-oauth-icon" />
