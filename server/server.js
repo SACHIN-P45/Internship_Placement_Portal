@@ -28,6 +28,39 @@ const placementHeadRoutes = require('./routes/placementHeadRoutes');
 // Connect to MongoDB
 connectDB();
 
+// --- AUTO-SEED ADMIN AND PLACEMENT HEAD TO LIVE ATLAS DB ---
+const seedAdmins = async () => {
+  const User = require('./models/User');
+  try {
+    const adminExists = await User.findOne({ email: 'admin@portal.com' });
+    if (!adminExists) {
+      await User.create({
+        name: 'Admin User',
+        email: 'admin@portal.com',
+        password: 'admin123',
+        role: 'admin',
+      });
+      console.log('✅ Live DB Seed: Admin user created!');
+    }
+
+    const headExists = await User.findOne({ email: 'placementhead@test.com' });
+    if (!headExists) {
+      await User.create({
+        name: 'Dr. Placement Officer',
+        email: 'placementhead@test.com',
+        password: 'placement123',
+        role: 'placementHead',
+        department: 'Placement Cell',
+      });
+      console.log('✅ Live DB Seed: Placement Head user created!');
+    }
+  } catch (error) {
+    console.error('Live DB Seed Error:', error.message);
+  }
+};
+seedAdmins();
+// -----------------------------------------------------------
+
 // Start automatic job expiration checker
 startJobExpirationChecker();
 
