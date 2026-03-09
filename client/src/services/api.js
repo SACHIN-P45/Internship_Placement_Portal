@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Safely resolve the base URL and ensure it ends with '/api'
-const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const rawApiUrl = import.meta.env.VITE_API_URL || 'https://internship-placement-portal.onrender.com/api';
 export const API_BASE_URL = rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/$/, '')}/api`;
 
 const API = axios.create({

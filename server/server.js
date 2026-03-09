@@ -58,8 +58,15 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth/login', authLimiter);
 
-// --------------- Body Parsing ---------------
-app.use(cors());
+// --------------- Body Parsing & CORS ---------------
+app.use(cors({
+  origin: [
+    'https://internship-placement-portal-kappa.vercel.app',
+    'http://localhost:3001',
+    'http://localhost:3002'
+  ],
+  credentials: true,
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
