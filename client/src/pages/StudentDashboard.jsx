@@ -244,10 +244,10 @@ const StudentDashboard = () => {
             </div>
             <div>
               <h1 className="phd-hero-title">{getGreeting()}, {user?.name?.split(' ')[0]} 👋</h1>
-              <p className="phd-hero-sub">
-                {user?.department && <span><FaGraduationCap style={{ marginRight: 6 }} />{user.department}</span>}
-                {user?.cgpa && <span style={{ marginLeft: 14 }}><FaStar style={{ marginRight: 4 }} />CGPA: {user.cgpa}</span>}
-              </p>
+              <div className="phd-hero-sub" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                {user?.department && <span style={{ display: 'flex', alignItems: 'center' }}><FaGraduationCap style={{ marginRight: 6 }} />{user.department}</span>}
+                {user?.cgpa && <span style={{ display: 'flex', alignItems: 'center' }}><FaStar style={{ marginRight: 4 }} />CGPA: {user.cgpa}</span>}
+              </div>
             </div>
           </div>
           {/* Profile ring sits inside hero right */}
