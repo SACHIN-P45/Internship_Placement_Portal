@@ -33,6 +33,9 @@ startJobExpirationChecker();
 
 const app = express();
 
+// Trust proxy for Render deployment (required for express-rate-limit)
+app.set('trust proxy', 1);
+
 // --------------- Security Middleware ---------------
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(morgan('dev'));
