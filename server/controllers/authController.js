@@ -354,7 +354,10 @@ exports.forgotPassword = async (req, res, next) => {
       user.resetPasswordToken = null;
       user.resetPasswordTokenExpiry = null;
       await user.save();
-      return res.status(500).json({ message: 'Error sending password reset email. Please try again later.' });
+      return res.status(500).json({
+        message: 'Error sending password reset email',
+        details: emailError.message
+      });
     }
 
     res.json({ message: 'Password reset link sent to your email' });

@@ -1,8 +1,12 @@
 {
     "rewrites": [
         {
-            "source": "/api/auth/:path*",
-            "destination": "https://internship-placement-portal.onrender.com/api/auth/:path*"
+            "source": "/api/auth/google",
+            "destination": "https://internship-placement-portal.onrender.com/api/auth/google"
+        },
+        {
+            "source": "/api/auth/github",
+            "destination": "https://internship-placement-portal.onrender.com/api/auth/github"
         },
         {
             "source": "/(.*)",
