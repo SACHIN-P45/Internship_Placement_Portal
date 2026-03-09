@@ -1,7 +1,9 @@
 // Axios instance with base URL and auth token interceptor
 import axios from 'axios';
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Safely resolve the base URL and ensure it ends with '/api'
+const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const API_BASE_URL = rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/$/, '')}/api`;
 
 const API = axios.create({
   baseURL: API_BASE_URL,
