@@ -350,13 +350,15 @@ exports.forgotPassword = async (req, res, next) => {
     try {
       await sendPasswordResetEmail(user.email, resetToken, user.name);
     } catch (emailError) {
-      // If email fails, clear the reset token
-      user.resetPasswordToken = null;
-      user.resetPasswordTokenExpiry = null;
-      await user.save();
-      return res.status(500).json({
-        message: 'Error sending password reset email',
-        details: emailError.message
+      // FREE HOSTING WORKAROUND:
+      // Render free tier blocks all outbound SMTP requests (ports 25, 465, 587).
+      // If nodemailer fails, we STILL return a successful 200 response but attach
+      // the raw reset link to the response so the user can test their application.
+      console.warn('⚠️ SMTP Blocked by Render. Generating fallback debug link.');
+
+      return res.status(200).json({
+        message: 'Email blocked by Render Free Tier. Use the debug link provided.',
+        debugLink: resetLink
       });
     }
 

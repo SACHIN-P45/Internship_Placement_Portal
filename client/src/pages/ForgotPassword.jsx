@@ -25,6 +25,9 @@ const ForgotPassword = () => {
       }
 
       const response = await authService.forgotPassword({ email });
+      if (response.data && response.data.debugLink) {
+        setResetLink(response.data.debugLink);
+      }
       setSubmitted(true);
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred. Please try again.');
@@ -153,6 +156,20 @@ const ForgotPassword = () => {
                   The link will expire in 1 hour. If you don't see it in your inbox,
                   please check your spam folder.
                 </p>
+
+                {resetLink && (
+                  <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe', textAlign: 'left' }}>
+                    <p style={{ color: '#1e40af', margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>
+                      ⚠️ Render Free Tier Detected
+                    </p>
+                    <p style={{ color: '#1e3a8a', margin: '0 0 12px 0', fontSize: '13px' }}>
+                      Outbound emails are blocked on the free hosting plan. For testing purposes, please use this direct reset link:
+                    </p>
+                    <a href={resetLink} style={{ color: '#3b82f6', fontWeight: 'bold', textDecoration: 'underline', wordBreak: 'break-all', fontSize: '14px' }}>
+                      {resetLink}
+                    </a>
+                  </div>
+                )}
 
                 <div className="forgot-password-success-actions">
                   <button
