@@ -11,6 +11,7 @@ const {
   toggleBookmark,
   getBookmarkedJobs,
   getBookmarkIds,
+  getRecommendedJobs,
 } = require('../controllers/jobController');
 const protect = require('../middleware/auth');
 const authorize = require('../middleware/role');
@@ -23,6 +24,7 @@ router.get('/my', protect, authorize('company'), getMyJobs);
 router.get('/bookmarks', protect, authorize('student'), getBookmarkedJobs);
 router.get('/bookmarks/ids', protect, authorize('student'), getBookmarkIds);
 router.post('/:id/bookmark', protect, authorize('student'), toggleBookmark);
+router.get('/recommendations', protect, authorize('student'), getRecommendedJobs);
 
 router.get('/:id', getJob);
 

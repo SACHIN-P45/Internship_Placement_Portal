@@ -13,6 +13,7 @@ import {
   FaSearch,
   FaSignInAlt,
 } from 'react-icons/fa';
+import NotificationDropdown from './NotificationDropdown';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -132,31 +133,34 @@ const Navbar = () => {
           {/* Right section */}
           <div className="hdr-right d-none d-lg-flex">
             {user ? (
-              <div className="hdr-user-menu" ref={dropdownRef}>
-                <button className="hdr-user-btn" onClick={() => setDropdownOpen(!dropdownOpen)}>
-                  <div className="hdr-avatar">{user.name.charAt(0).toUpperCase()}</div>
-                  <span className="hdr-user-name">{user.name}</span>
-                  <FaChevronDown size={10} className={`hdr-chevron ${dropdownOpen ? 'open' : ''}`} />
-                </button>
+              <div className="d-flex align-items-center gap-3">
+                <NotificationDropdown />
+                <div className="hdr-user-menu" ref={dropdownRef}>
+                  <button className="hdr-user-btn" onClick={() => setDropdownOpen(!dropdownOpen)}>
+                    <div className="hdr-avatar">{user.name.charAt(0).toUpperCase()}</div>
+                    <span className="hdr-user-name">{user.name}</span>
+                    <FaChevronDown size={10} className={`hdr-chevron ${dropdownOpen ? 'open' : ''}`} />
+                  </button>
 
-                {dropdownOpen && (
-                  <div className="hdr-dropdown">
-                    <div className="hdr-dropdown-header">
-                      <div className="hdr-dropdown-avatar">{user.name.charAt(0).toUpperCase()}</div>
-                      <div>
-                        <div className="fw-bold small">{user.name}</div>
-                        <span className="hdr-role-badge">{user.role}</span>
+                  {dropdownOpen && (
+                    <div className="hdr-dropdown">
+                      <div className="hdr-dropdown-header">
+                        <div className="hdr-dropdown-avatar">{user.name.charAt(0).toUpperCase()}</div>
+                        <div>
+                          <div className="fw-bold small">{user.name}</div>
+                          <span className="hdr-role-badge">{user.role}</span>
+                        </div>
                       </div>
+                      <div className="hdr-dropdown-divider" />
+                      <Link className="hdr-dropdown-item" to={getDashboardLink()} onClick={() => setDropdownOpen(false)}>
+                        <FaTachometerAlt size={14} /> <span>Dashboard</span>
+                      </Link>
+                      <button className="hdr-dropdown-item text-danger" onClick={handleLogout}>
+                        <FaSignOutAlt size={14} /> <span>Logout</span>
+                      </button>
                     </div>
-                    <div className="hdr-dropdown-divider" />
-                    <Link className="hdr-dropdown-item" to={getDashboardLink()} onClick={() => setDropdownOpen(false)}>
-                      <FaTachometerAlt size={14} /> <span>Dashboard</span>
-                    </Link>
-                    <button className="hdr-dropdown-item text-danger" onClick={handleLogout}>
-                      <FaSignOutAlt size={14} /> <span>Logout</span>
-                    </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ) : (
               <div className="d-flex align-items-center gap-2">

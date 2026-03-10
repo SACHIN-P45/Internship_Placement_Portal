@@ -13,6 +13,9 @@ const jobService = {
   toggleBookmark: (id) => API.post(`/jobs/${id}/bookmark`),
   getBookmarkedJobs: () => API.get('/jobs/bookmarks'),
   getBookmarkIds: () => API.get('/jobs/bookmarks/ids'),
+
+  // Skills-based recommendations (students only)
+  getRecommendations: () => API.get('/jobs/recommendations'),
 };
 
 export default jobService;

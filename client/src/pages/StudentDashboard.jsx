@@ -37,6 +37,8 @@ import {
   FaMapMarkerAlt,
   FaMoneyBillWave,
   FaTrashAlt,
+  FaFire,
+  FaCode,
 } from 'react-icons/fa';
 
 const StudentDashboard = () => {
@@ -60,6 +62,8 @@ const StudentDashboard = () => {
   const [removingBookmark, setRemovingBookmark] = useState(null);
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
   const [selectedResumeId, setSelectedResumeId] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecs, setLoadingRecs] = useState(false);
 
   // Load profile data
   useEffect(() => {
@@ -102,6 +106,18 @@ const StudentDashboard = () => {
         .getResumeHistory()
         .then(({ data }) => setResumes(data))
         .catch(() => { });
+    }
+  }, [user]);
+
+  // Load skill-based recommendations
+  useEffect(() => {
+    if (user && user.skills && user.skills.length > 0) {
+      setLoadingRecs(true);
+      jobService
+        .getRecommendations()
+        .then(({ data }) => setRecommendations(data))
+        .catch(() => setRecommendations([]))
+        .finally(() => setLoadingRecs(false));
     }
   }, [user]);
 
@@ -354,6 +370,134 @@ const StudentDashboard = () => {
             <div className="phd-stat-glow" />
           </div>
         ))}
+      </div>
+
+      {/* ═══ RECOMMENDED FOR YOU ═══ */}
+      <div className="phd-card" style={{ marginTop: '24px' }}>
+        <div className="phd-card-header">
+          <div className="phd-card-icon" style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)', color: '#fff' }}><FaFire size={16} /></div>
+          <div>
+            <h3 className="phd-card-title">Recommended For You 🎯</h3>
+            <p className="phd-card-sub">Jobs matched to your skills</p>
+          </div>
+          {recommendations.length > 0 && (
+            <Link to="/jobs" className="phd-card-badge" style={{ textDecoration: 'none', marginLeft: 'auto' }}>See All <FaArrowRight size={10} style={{ marginLeft: 4 }} /></Link>
+          )}
+        </div>
+
+        {loadingRecs ? (
+          <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem' }}>
+            <span className="spinner-border spinner-border-sm me-2" />Finding matches…
+          </div>
+        ) : !user?.skills?.length ? (
+          <div style={{ padding: '20px 24px', color: '#94a3b8', fontSize: '0.9rem' }}>
+            <FaCode style={{ marginRight: 6 }} />Add your skills in the profile form above to get personalised job recommendations!
+          </div>
+        ) : recommendations.length === 0 ? (
+          <div style={{ padding: '20px 24px', color: '#94a3b8', fontSize: '0.9rem' }}>
+            No matching jobs found right now. Check back later or <Link to="/jobs" style={{ color: '#6366f1', fontWeight: 600 }}>browse all jobs →</Link>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px', padding: '0 24px 24px' }}>
+            {recommendations.map((job, i) => (
+              <div
+                key={job._id}
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  animationDelay: `${i * 0.05}s`,
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.09)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
+              >
+                {/* Header row */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1e293b', lineHeight: 1.3 }}>{job.title}</div>
+                    <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: 2 }}>{job.companyName}</div>
+                  </div>
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      background: job.type === 'internship' ? '#ede9fe' : '#eff6ff',
+                      color: job.type === 'internship' ? '#7c3aed' : '#2563eb',
+                      borderRadius: 20,
+                      padding: '2px 8px',
+                    }}
+                  >
+                    {job.type === 'internship' ? '🎓 Intern' : '💼 Job'}
+                  </span>
+                </div>
+
+                {/* Match score bar */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#64748b', marginBottom: 4 }}>
+                    <span>Skill Match</span>
+                    <span style={{ fontWeight: 700, color: job.matchScore >= 70 ? '#16a34a' : job.matchScore >= 40 ? '#d97706' : '#64748b' }}>{job.matchScore}%</span>
+                  </div>
+                  <div style={{ height: 6, background: '#e2e8f0', borderRadius: 999, overflow: 'hidden' }}>
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${job.matchScore}%`,
+                        background: job.matchScore >= 70
+                          ? 'linear-gradient(90deg,#22c55e,#16a34a)'
+                          : job.matchScore >= 40
+                            ? 'linear-gradient(90deg,#f59e0b,#d97706)'
+                            : 'linear-gradient(90deg,#94a3b8,#64748b)',
+                        borderRadius: 999,
+                        transition: 'width 0.8s ease',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Matched skills chips */}
+                {job.matchedSkills?.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {job.matchedSkills.slice(0, 3).map((sk, si) => (
+                      <span key={si} style={{ fontSize: '0.68rem', padding: '2px 8px', background: '#dcfce7', color: '#15803d', borderRadius: 20, fontWeight: 600 }}>
+                        ✓ {sk}
+                      </span>
+                    ))}
+                    {job.matchedSkills.length > 3 && (
+                      <span style={{ fontSize: '0.68rem', padding: '2px 8px', background: '#f1f5f9', color: '#64748b', borderRadius: 20 }}>+{job.matchedSkills.length - 3} more</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Meta row + Apply */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <FaMoneyBillWave size={10} /> {job.salary || 'Competitive'}
+                  </div>
+                  <Link
+                    to={`/jobs/${job._id}`}
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: '#fff',
+                      background: 'linear-gradient(135deg,#6366f1,#4f46e5)',
+                      padding: '5px 14px',
+                      borderRadius: 20,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    View <FaArrowRight size={9} style={{ marginLeft: 3 }} />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ═══ MAIN CONTENT ═══ */}

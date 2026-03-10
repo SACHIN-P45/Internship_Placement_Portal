@@ -3,6 +3,7 @@ const Application = require('../models/Application');
 const Job = require('../models/Job');
 const User = require('../models/User');
 const Resume = require('../models/Resume');
+const Notification = require('../models/Notification');
 
 // @desc    Apply for a job (student)
 // @route   POST /api/applications/:jobId
@@ -126,6 +127,19 @@ exports.updateApplicationStatus = async (req, res, next) => {
 
     application.status = status;
     await application.save();
+
+    // Create a notification for the student
+    try {
+      let message = `Your application status for ${application.job?.title || 'a job'} has been updated to ${status}.`;
+      await Notification.create({
+        user: application.student,
+        message,
+        type: status === 'rejected' ? 'error' : status === 'selected' ? 'success' : status === 'shortlisted' ? 'success' : 'info',
+        link: '/applications'
+      });
+    } catch (notifErr) {
+      console.error('Failed to create notification:', notifErr);
+    }
 
     res.json(application);
   } catch (error) {

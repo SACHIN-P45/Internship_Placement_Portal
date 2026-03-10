@@ -34,6 +34,7 @@ import {
   FaStar,
   FaLightbulb,
 } from 'react-icons/fa';
+import NotificationDropdown from './NotificationDropdown';
 
 const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
   const { user, logout } = useAuth();
@@ -229,18 +230,25 @@ const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
 
         {/* ---- Profile Card ---- */}
         {user && (
-          <div className="sidebar-profile">
-            <div className="sidebar-profile-avatar" style={{ background: currentRole.gradient }}>
-              {user.name?.charAt(0).toUpperCase()}
+          <div className="sidebar-profile d-flex justify-content-between align-items-center" style={{ position: 'relative' }}>
+            <div className="d-flex align-items-center" style={{ gap: '0.75rem' }}>
+              <div className="sidebar-profile-avatar" style={{ background: currentRole.gradient, minWidth: '32px' }}>
+                {user.name?.charAt(0).toUpperCase()}
+              </div>
+              {!isCollapsed && (
+                <div className="sidebar-profile-info" style={{ overflow: 'hidden' }}>
+                  <div className="sidebar-profile-greeting">{getGreeting()}</div>
+                  <div className="sidebar-profile-name text-truncate">{user.name}</div>
+                  <div className="sidebar-profile-role">
+                    <currentRole.icon size={10} className="me-1" />
+                    {currentRole.label}
+                  </div>
+                </div>
+              )}
             </div>
             {!isCollapsed && (
-              <div className="sidebar-profile-info">
-                <div className="sidebar-profile-greeting">{getGreeting()}</div>
-                <div className="sidebar-profile-name">{user.name}</div>
-                <div className="sidebar-profile-role">
-                  <currentRole.icon size={10} className="me-1" />
-                  {currentRole.label}
-                </div>
+              <div style={{ marginLeft: 'auto' }}>
+                <NotificationDropdown isSidebar={true} />
               </div>
             )}
           </div>

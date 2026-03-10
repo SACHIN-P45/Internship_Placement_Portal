@@ -242,3 +242,58 @@ exports.getBookmarkIds = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Get skill-based job recommendations for a student
+// @route   GET /api/jobs/recommendations
+// @access  Student
+exports.getRecommendedJobs = async (req, res, next) => {
+  try {
+    const User = require('../models/User');
+    const student = await User.findById(req.user._id).select('skills cgpa');
+
+    const studentSkills = (student.skills || []).map((s) => s.toLowerCase().trim());
+
+    if (studentSkills.length === 0) {
+      return res.json([]);
+    }
+
+    // Get all active jobs
+    const jobs = await Job.find({ isActive: true }).sort({ createdAt: -1 });
+
+    // Calculate match score for each job
+    const scored = jobs.map((job) => {
+      const jobSkills = (job.skillsRequired || []).map((s) => s.toLowerCase().trim());
+
+      if (jobSkills.length === 0) {
+        return null; // skip jobs with no skill requirements
+      }
+
+      // Find which student skills match job requirements
+      const matchedSkills = studentSkills.filter((sk) =>
+        jobSkills.some((jsk) => jsk.includes(sk) || sk.includes(jsk))
+      );
+
+      const matchScore = Math.round((matchedSkills.length / jobSkills.length) * 100);
+
+      if (matchScore === 0) return null;
+
+      return {
+        ...job.toObject(),
+        matchScore,
+        matchedSkills: matchedSkills.map(
+          (ms) => job.skillsRequired.find((s) => s.toLowerCase().trim().includes(ms) || ms.includes(s.toLowerCase().trim())) || ms
+        ),
+      };
+    });
+
+    // Filter nulls, sort by score desc, limit to top 6
+    const recommendations = scored
+      .filter(Boolean)
+      .sort((a, b) => b.matchScore - a.matchScore)
+      .slice(0, 6);
+
+    res.json(recommendations);
+  } catch (error) {
+    next(error);
+  }
+};
