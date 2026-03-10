@@ -37,7 +37,7 @@ const ResetPassword = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
-    
+
     // Clear validation error for this field
     if (validationErrors[name]) {
       setValidationErrors({ ...validationErrors, [name]: '' });
@@ -152,7 +152,7 @@ const ResetPassword = () => {
                       placeholder="Enter new password"
                       value={form.password}
                       onChange={handleChange}
-                      disabled={loading}
+                      disabled={loading || submitted}
                       required
                     />
                     <button
@@ -183,7 +183,7 @@ const ResetPassword = () => {
                       placeholder="Confirm new password"
                       value={form.confirmPassword}
                       onChange={handleChange}
-                      disabled={loading}
+                      disabled={loading || submitted}
                       required
                     />
                     <button
@@ -204,7 +204,7 @@ const ResetPassword = () => {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || submitted}
                   className="reset-password-btn reset-password-btn-primary"
                 >
                   {loading ? 'Resetting Password...' : 'Reset Password'}
