@@ -1,20 +1,42 @@
 // Email service for sending password reset emails
-const nodemailer = require('nodemailer');
+// Rewritten to proxy requests to Vercel Serverless Function since Render blocks outbound SMTP
 
-// Create transporter using Gmail with explicit host configuration
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-  tls: {
-    // do not fail on invalid certs (sometimes required for free hosting platforms)
-    rejectUnauthorized: false
+/**
+ * Send email via Vercel proxy
+ */
+const sendMailViaProxy = async (to, subject, htmlContent) => {
+  const proxyUrl = 'https://internship-placement-portal-kappa.vercel.app/api/sendmail';
+
+  const payload = {
+    to,
+    subject,
+    htmlContent,
+    creds: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD,
+      secret: 'super-secure-portal-secret-key-123'
+    }
+  };
+
+  try {
+    const response = await fetch(proxyUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: response.statusText }));
+      throw new Error(errorData.message || 'Error from email proxy');
+    }
+
+    return await response.json();
+  } catch (error) {
+    throw new Error('Vercel SMTP Proxy Failed: ' + error.message);
   }
-});
+};
 
 /**
  * Send password reset email
@@ -84,14 +106,14 @@ exports.sendPasswordResetEmail = async (email, resetToken, userName) => {
     console.log(`Reset Link: ${resetUrl}`);
     console.log('-'.repeat(60));
 
-    // Try to send email
+    // Try to send email via Vercel Proxy
     try {
-      const result = await transporter.sendMail(mailOptions);
-      console.log(`✅ Password reset email successfully sent to ${email}\n`);
+      const result = await sendMailViaProxy(email, mailOptions.subject, htmlContent);
+      console.log(`✅ Password reset email proxy successfully dispatched to ${email}\n`);
       return true;
-    } catch (smtpError) {
-      console.error(`❌ Error sending email via Gmail SMTP:`, smtpError.message);
-      throw smtpError;
+    } catch (proxyError) {
+      console.error(`❌ Error triggering Vercel Email Proxy:`, proxyError.message);
+      throw proxyError;
     }
   } catch (error) {
     console.error('❌ Error preparing password reset email:', error);
@@ -154,12 +176,12 @@ exports.sendWelcomeEmail = async (email, userName) => {
       console.log('(In production, this would be sent via email)\n');
     }
 
-    // Try to send email, but don't fail if SMTP is unavailable
+    // Try to send email, but don't fail if proxy is unavailable
     try {
-      await transporter.sendMail(mailOptions);
-      console.log(`✅ Welcome email successfully sent to ${email}`);
-    } catch (smtpError) {
-      console.warn(`⚠️  Could not send email via SMTP: ${smtpError.message}`);
+      await sendMailViaProxy(email, mailOptions.subject, htmlContent);
+      console.log(`✅ Welcome email proxy successfully dispatched to ${email}`);
+    } catch (proxyError) {
+      console.warn(`⚠️  Could not trigger Vercel Email Proxy: ${proxyError.message}`);
       console.log(`📌 Welcome email information available in console output above`);
     }
 
