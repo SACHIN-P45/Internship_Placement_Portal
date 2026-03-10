@@ -152,9 +152,62 @@ const StudentDashboard = () => {
   // Update profile
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
+
+    // Validations
+    if (!profile.name?.trim()) {
+      return toast.error('Full Name is required');
+    }
+    if (profile.name.trim().length < 2) {
+      return toast.error('Full Name must be at least 2 characters');
+    }
+
+    if (!profile.department?.trim()) {
+      return toast.error('Department is required');
+    }
+    if (profile.department.trim().length < 2) {
+      return toast.error('Department must be at least 2 characters');
+    }
+
+    if (profile.cgpa === '' || profile.cgpa === null || profile.cgpa === undefined) {
+      return toast.error('CGPA is required');
+    }
+    const cgpaNum = parseFloat(profile.cgpa);
+    if (isNaN(cgpaNum) || cgpaNum < 0 || cgpaNum > 10) {
+      return toast.error('CGPA must be a valid number between 0 and 10');
+    }
+
+    if (!profile.phone?.trim()) {
+      return toast.error('Phone number is required');
+    }
+    const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/;
+    if (!phoneRegex.test(profile.phone) || profile.phone.replace(/[^0-9]/g, '').length < 10) {
+      return toast.error('Please enter a valid phone number (min 10 digits)');
+    }
+
+    if (!profile.skills?.trim()) {
+      return toast.error('At least one skill is required');
+    }
+
+    if (!profile.bio?.trim()) {
+      return toast.error('Bio is required');
+    }
+    if (profile.bio.trim().length < 10) {
+      return toast.error('Bio must be at least 10 characters');
+    }
+    if (profile.bio.trim().length > 500) {
+      return toast.error('Bio must not exceed 500 characters');
+    }
+
     setSaving(true);
     try {
-      await authService.updateProfile(profile);
+      await authService.updateProfile({
+        ...profile,
+        name: profile.name.trim(),
+        department: profile.department.trim(),
+        phone: profile.phone.trim(),
+        skills: profile.skills.trim(),
+        bio: profile.bio.trim(),
+      });
       await refreshUser();
       toast.success('Profile updated successfully!');
     } catch (err) {
@@ -321,12 +374,12 @@ const StudentDashboard = () => {
             <form onSubmit={handleProfileUpdate} style={{ padding: '0 24px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div className="stu-form-group">
                 <label className="stu-label">Full Name</label>
-                <input className="stu-input" type="text" value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} />
+                <input className="stu-input" type="text" maxLength="50" value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} />
               </div>
               <div className="stu-form-row">
                 <div className="stu-form-group">
                   <label className="stu-label">Department</label>
-                  <input className="stu-input" type="text" value={profile.department} onChange={(e) => setProfile({ ...profile, department: e.target.value })} placeholder="e.g. Computer Science" />
+                  <input className="stu-input" type="text" maxLength="50" value={profile.department} onChange={(e) => setProfile({ ...profile, department: e.target.value })} placeholder="e.g. Computer Science" />
                 </div>
                 <div className="stu-form-group">
                   <label className="stu-label">CGPA</label>
@@ -335,7 +388,7 @@ const StudentDashboard = () => {
               </div>
               <div className="stu-form-group">
                 <label className="stu-label"><FaPhone size={10} style={{ marginRight: 4 }} />Phone</label>
-                <input className="stu-input" type="tel" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} placeholder="+91 XXXXX XXXXX" />
+                <input className="stu-input" type="tel" maxLength="15" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} placeholder="+91 XXXXX XXXXX" />
               </div>
               <div className="stu-form-group">
                 <label className="stu-label">Skills <span style={{ color: '#94a3b8', fontWeight: 400 }}>(comma-separated)</span></label>
@@ -348,7 +401,7 @@ const StudentDashboard = () => {
               </div>
               <div className="stu-form-group">
                 <label className="stu-label"><FaInfoCircle size={10} style={{ marginRight: 4 }} />Bio</label>
-                <textarea className="stu-input stu-textarea" rows="3" value={profile.bio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} placeholder="Tell employers about yourself…" />
+                <textarea className="stu-input stu-textarea" rows="3" maxLength="500" value={profile.bio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} placeholder="Tell employers about yourself…" />
               </div>
               <button type="submit" className="stu-btn stu-btn-primary" disabled={saving}>
                 {saving ? <><span className="spinner-border spinner-border-sm" /> Saving…</> : <><FaCheckCircle size={13} /> Save Changes</>}
