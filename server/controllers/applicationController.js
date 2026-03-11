@@ -191,7 +191,22 @@ exports.cancelApplication = async (req, res, next) => {
     //   return res.status(400).json({ message: 'Cannot cancel application at this stage' });
     // }
 
+    const jobId = application.job;
     await application.deleteOne();
+
+    // Check if the job was previously closed due to reaching the openings limit
+    // and reactivate it if the application count drops below the limit
+    const job = await Job.findById(jobId);
+    if (job && !job.isActive && job.openings) {
+      const applicationCount = await Application.countDocuments({ job: jobId });
+      if (applicationCount < job.openings) {
+        // Only reactivate if deadline hasn't passed
+        if (!job.deadline || new Date(job.deadline) > new Date()) {
+          job.isActive = true;
+          await job.save();
+        }
+      }
+    }
 
     res.json({ message: 'Application cancelled successfully' });
   } catch (error) {
