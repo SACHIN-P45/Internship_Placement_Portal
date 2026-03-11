@@ -112,6 +112,20 @@ const ApplicationStatus = () => {
     }
   };
 
+  const handleCancelApplication = async (appId) => {
+    if (!window.confirm('Are you sure you want to cancel this application? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await applicationService.cancel(appId);
+      setApplications(prev => prev.filter(a => a._id !== appId));
+      showSavedToast('Application cancelled successfully');
+    } catch {
+      showSavedToast('Failed to cancel application');
+    }
+  };
+
   // ── Application stats & filters ──
   const stats = useMemo(() => ({
     '': applications.length,
@@ -384,13 +398,23 @@ const ApplicationStatus = () => {
                               <StatusBadge status={app.status} />
                             </td>
                             <td style={{ textAlign: 'center' }}>
-                              <Link
-                                to={`/jobs/${app.job?._id}`}
-                                className="apps-view-btn"
-                                title="View job details"
-                              >
-                                <FaExternalLinkAlt size={12} />
-                              </Link>
+                              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                <Link
+                                  to={`/jobs/${app.job?._id}`}
+                                  className="apps-view-btn"
+                                  title="View job details"
+                                >
+                                  <FaExternalLinkAlt size={12} />
+                                </Link>
+                                <button
+                                  className="apps-view-btn"
+                                  style={{ color: '#ef4444', borderColor: '#ef4444' }}
+                                  onClick={() => handleCancelApplication(app._id)}
+                                  title="Cancel Application"
+                                >
+                                  <FaTrashAlt size={12} />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );

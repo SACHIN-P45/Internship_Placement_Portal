@@ -169,3 +169,32 @@ exports.getAllApplications = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Cancel/ withdraw a job application
+// @route   DELETE /api/applications/:id
+// @access  Student
+exports.cancelApplication = async (req, res, next) => {
+  try {
+    const application = await Application.findById(req.params.id);
+
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    // Ensure only the student who applied can cancel it
+    if (application.student.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to cancel this application' });
+    }
+
+    // Optional: Prevent cancellation if status is not 'applied' (e.g. already selected/shortlisted)
+    // if (application.status !== 'applied') {
+    //   return res.status(400).json({ message: 'Cannot cancel application at this stage' });
+    // }
+
+    await application.deleteOne();
+
+    res.json({ message: 'Application cancelled successfully' });
+  } catch (error) {
+    next(error);
+  }
+};

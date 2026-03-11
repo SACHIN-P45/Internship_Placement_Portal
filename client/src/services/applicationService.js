@@ -7,7 +7,8 @@ const applicationService = {
   getApplicantsForJob: (jobId) => API.get(`/applications/job/${jobId}`),
   updateStatus: (id, status) => API.put(`/applications/${id}/status`, { status }),
   getAll: () => API.get('/applications'),
-  downloadApplicantResume: (applicationId) => 
+  cancel: (id) => API.delete(`/applications/${id}`),
+  downloadApplicantResume: (applicationId) =>
     API.get(`/auth/application/${applicationId}/resume`, { responseType: 'blob' }),
 };
 
