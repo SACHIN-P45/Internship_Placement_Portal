@@ -1,8 +1,16 @@
 {
     "rewrites": [
         {
+            "source": "/api/auth/google/callback",
+            "destination": "https://internship-placement-portal.onrender.com/api/auth/google/callback"
+        },
+        {
             "source": "/api/auth/google",
             "destination": "https://internship-placement-portal.onrender.com/api/auth/google"
+        },
+        {
+            "source": "/api/auth/github/callback",
+            "destination": "https://internship-placement-portal.onrender.com/api/auth/github/callback"
         },
         {
             "source": "/api/auth/github",
