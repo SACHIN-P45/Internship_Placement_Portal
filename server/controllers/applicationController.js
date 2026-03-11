@@ -4,6 +4,7 @@ const Job = require('../models/Job');
 const User = require('../models/User');
 const Resume = require('../models/Resume');
 const Notification = require('../models/Notification');
+const { sendApplicationStatusEmail } = require('../utils/emailService');
 
 // @desc    Apply for a job (student)
 // @route   POST /api/applications/:jobId
@@ -146,6 +147,22 @@ exports.updateApplicationStatus = async (req, res, next) => {
       });
     } catch (notifErr) {
       console.error('Failed to create notification:', notifErr);
+    }
+
+    // Send email notification to student (non-fatal)
+    try {
+      const student = await User.findById(application.student).select('name email');
+      if (student && student.email) {
+        await sendApplicationStatusEmail(
+          student.email,
+          student.name,
+          application.job?.title || 'a Job',
+          application.job?.companyName || 'the company',
+          status
+        );
+      }
+    } catch (emailErr) {
+      console.warn('Failed to send application status email:', emailErr.message);
     }
 
     res.json(application);

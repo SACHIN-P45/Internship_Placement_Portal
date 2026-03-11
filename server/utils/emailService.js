@@ -1,4 +1,4 @@
-// Email service for sending password reset emails
+// Email service — password reset, welcome, and application status notifications
 // Rewritten to proxy requests to Vercel Serverless Function since Render blocks outbound SMTP
 
 /**
@@ -189,5 +189,105 @@ exports.sendWelcomeEmail = async (email, userName) => {
   } catch (error) {
     console.error('❌ Error preparing welcome email:', error);
     throw error;
+  }
+};
+
+/**
+ * Send application status change email to student
+ * @param {string} email        - Student's email address
+ * @param {string} studentName  - Student's name
+ * @param {string} jobTitle     - Title of the job/internship
+ * @param {string} companyName  - Company display name
+ * @param {string} status       - New status (applied | shortlisted | selected | rejected)
+ */
+exports.sendApplicationStatusEmail = async (email, studentName, jobTitle, companyName, status) => {
+  try {
+    const frontendUrl =
+      process.env.FRONTEND_URL ||
+      process.env.CLIENT_URL ||
+      'https://internship-placement-portal-kappa.vercel.app';
+
+    const configs = {
+      shortlisted: {
+        subject: `You have been Shortlisted — ${jobTitle}`,
+        color: '#f59e0b',
+        emoji: '🌟',
+        headline: "Congratulations! You've been Shortlisted.",
+        body: `We are pleased to inform you that your application for <strong>${jobTitle}</strong> at <strong>${companyName}</strong> has been <strong>shortlisted</strong>. The company will be reaching out soon with next steps.`,
+      },
+      selected: {
+        subject: `You have been Selected — ${jobTitle}`,
+        color: '#22c55e',
+        emoji: '🏆',
+        headline: "Congratulations! You've been Selected!",
+        body: `Outstanding news! Your application for <strong>${jobTitle}</strong> at <strong>${companyName}</strong> has been <strong>selected</strong>. The company will contact you shortly with offer details.`,
+      },
+      rejected: {
+        subject: `Application Update — ${jobTitle}`,
+        color: '#ef4444',
+        emoji: '📋',
+        headline: 'Application Status Update',
+        body: `Thank you for your interest in the <strong>${jobTitle}</strong> position at <strong>${companyName}</strong>. After careful consideration, the company has decided to move forward with other candidates. Don't be discouraged — keep applying!`,
+      },
+      applied: {
+        subject: `Application Status Updated — ${jobTitle}`,
+        color: '#3b82f6',
+        emoji: '📨',
+        headline: 'Your Application Status has been Updated',
+        body: `Your application for <strong>${jobTitle}</strong> at <strong>${companyName}</strong> has been updated to <strong>applied</strong>. Track your status on the portal.`,
+      },
+    };
+
+    const cfg = configs[status] || configs['applied'];
+
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f5f5f5; padding: 20px; border-radius: 8px;">
+        <div style="background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <div style="text-align:center; margin-bottom: 24px;">
+            <span style="font-size: 48px;">${cfg.emoji}</span>
+            <h2 style="color: ${cfg.color}; margin: 12px 0 0;">${cfg.headline}</h2>
+          </div>
+          <p style="color: #555; font-size: 15px; line-height: 1.7;">Hi <strong>${studentName}</strong>,</p>
+          <p style="color: #555; font-size: 15px; line-height: 1.7;">${cfg.body}</p>
+          <div style="background-color: #f8f9fa; border-left: 4px solid ${cfg.color}; padding: 16px 20px; border-radius: 4px; margin: 24px 0;">
+            <p style="margin:0; color:#333; font-size:14px;"><strong>📌 Job Title:</strong> ${jobTitle}</p>
+            <p style="margin:8px 0 0; color:#333; font-size:14px;"><strong>🏢 Company:</strong> ${companyName}</p>
+            <p style="margin:8px 0 0; color:#333; font-size:14px;"><strong>📊 Status:</strong>
+              <span style="text-transform:capitalize; color:${cfg.color}; font-weight:bold;">${status}</span>
+            </p>
+          </div>
+          <div style="text-align:center; margin: 28px 0;">
+            <a href="${frontendUrl}/applications"
+              style="background-color: ${cfg.color}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+              View My Applications
+            </a>
+          </div>
+          <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 28px 0;" />
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            You are receiving this because you applied through the Internship Placement Portal.<br/>
+            &copy; ${new Date().getFullYear()} Internship Placement Portal. All rights reserved.
+          </p>
+        </div>
+      </div>
+    `;
+
+    console.log('\n' + '='.repeat(60));
+    console.log('📧 APPLICATION STATUS EMAIL');
+    console.log('='.repeat(60));
+    console.log(`To: ${email} | Status: ${status} | Job: ${jobTitle}`);
+    console.log('-'.repeat(60));
+
+    // Non-fatal — never break the status update flow
+    try {
+      await sendMailViaProxy(email, cfg.subject, htmlContent);
+      console.log(`✅ Application status email dispatched to ${email}\n`);
+    } catch (proxyError) {
+      console.warn(`⚠️  Could not send application status email: ${proxyError.message}`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('❌ Error preparing application status email:', error.message);
+    return false; // Non-fatal
   }
 };
