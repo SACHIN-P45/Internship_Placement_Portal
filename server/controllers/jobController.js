@@ -145,15 +145,10 @@ exports.updateJob = async (req, res, next) => {
       req.body.skillsRequired = req.body.skillsRequired.split(',').map((s) => s.trim());
     }
 
-    // Reactivate job if openings are increased and are now greater than current applications
-    if (req.body.openings && !job.isActive && req.body.isActive !== false) {
-      const applicationCount = await Application.countDocuments({ job: job._id });
-      if (req.body.openings > applicationCount) {
-        // Also check if deadline is not expired
-        if (!job.deadline || new Date(job.deadline) > new Date()) {
-          req.body.isActive = true;
-        }
-      }
+    // If deadline is still in the future (or no deadline), restore active status on edit
+    const deadlineToCheck = req.body.deadline ? new Date(req.body.deadline) : job.deadline;
+    if (!deadlineToCheck || deadlineToCheck > new Date()) {
+      req.body.isActive = true;
     }
 
     job = await Job.findByIdAndUpdate(req.params.id, req.body, {
