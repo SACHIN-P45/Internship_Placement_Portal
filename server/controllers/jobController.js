@@ -109,7 +109,16 @@ exports.getMyJobs = async (req, res, next) => {
     await closeExpiredJobs();
 
     const jobs = await Job.find({ company: req.user._id }).sort({ createdAt: -1 });
-    res.json(jobs);
+
+    // Attach application count to each job
+    const jobsWithCount = await Promise.all(
+      jobs.map(async (job) => {
+        const applicationCount = await Application.countDocuments({ job: job._id });
+        return { ...job.toObject(), applicationCount };
+      })
+    );
+
+    res.json(jobsWithCount);
   } catch (error) {
     next(error);
   }
