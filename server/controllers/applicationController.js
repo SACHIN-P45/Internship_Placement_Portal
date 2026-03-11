@@ -50,6 +50,13 @@ exports.applyForJob = async (req, res, next) => {
       resume: student.resume || `/uploads/${activeResume.fileName}`,
     });
 
+    // Check if the number of applications has reached the openings limit
+    const applicationCount = await Application.countDocuments({ job: req.params.jobId });
+    if (job.openings && applicationCount >= job.openings) {
+      job.isActive = false;
+      await job.save();
+    }
+
     res.status(201).json(application);
   } catch (error) {
     next(error);
