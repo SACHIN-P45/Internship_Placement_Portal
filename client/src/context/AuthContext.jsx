@@ -70,9 +70,20 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Set user from OAuth callback
-  const setUserFromOAuth = (userData) => {
+  const setUserFromOAuth = async (userData) => {
+    // Set immediate data first so loading state clears
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
+
+    // Fetch complete user profile from server immediately
+    try {
+      const { data: completeData } = await authService.getMe();
+      const updated = { ...completeData, token: userData.token };
+      localStorage.setItem('user', JSON.stringify(updated));
+      setUser(updated);
+    } catch (err) {
+      console.error('Failed to fetch complete profile after OAuth:', err);
+    }
   };
 
   // Logout
