@@ -28,6 +28,8 @@ import {
     Area,
     AreaChart,
     Legend,
+    LineChart,
+    Line,
 } from 'recharts';
 
 const MEDAL_ICONS = [FaTrophy, FaMedal, FaCrown, FaStar, FaStar];
@@ -310,21 +312,7 @@ const PHSalaryAnalytics = () => {
                             <span className="phsa-legend-item"><span className="phsa-legend-dot" style={{ background: '#10b981' }} /> Minimum</span>
                         </div>
                         <ResponsiveContainer width="100%" height={360}>
-                            <AreaChart data={salaryAnalytics.departmentWise.filter(d => d._id)} margin={{ top: 10, right: 20, left: -10, bottom: 60 }}>
-                                <defs>
-                                    <linearGradient id="saGradMax" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.25} />
-                                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="saGradAvg" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
-                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="saGradMin" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
-                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
+                            <LineChart data={salaryAnalytics.departmentWise.filter(d => d._id)} margin={{ top: 20, right: 30, left: -10, bottom: 60 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                 <XAxis
                                     dataKey="_id"
@@ -332,6 +320,7 @@ const PHSalaryAnalytics = () => {
                                     axisLine={{ stroke: '#e2e8f0', strokeWidth: 1 }}
                                     tickLine={false}
                                     dy={10}
+                                    padding={{ left: 30, right: 30 }}
                                 />
                                 <YAxis
                                     tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }}
@@ -340,23 +329,26 @@ const PHSalaryAnalytics = () => {
                                     tickFormatter={(v) => `₹${v}`}
                                 />
                                 <Tooltip
-                                    cursor={{ stroke: '#94a3b8', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                    cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
                                     contentStyle={{
                                         backgroundColor: 'rgba(255,255,255,0.98)',
                                         borderRadius: '14px',
                                         border: '1px solid #e2e8f0',
                                         boxShadow: '0 20px 40px -10px rgba(0,0,0,0.12)',
                                         backdropFilter: 'blur(10px)',
-                                        padding: '14px 18px',
+                                        padding: '16px 20px',
                                     }}
-                                    itemStyle={{ fontWeight: 'bold' }}
-                                    labelStyle={{ color: '#64748b', fontWeight: '700', marginBottom: '8px', fontSize: '0.85rem' }}
-                                    formatter={(val) => [`₹${Math.round(val)} LPA`]}
+                                    itemStyle={{ fontWeight: 'bold', padding: '4px 0' }}
+                                    labelStyle={{ color: '#0f172a', fontWeight: '800', marginBottom: '12px', fontSize: '0.9rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}
+                                    formatter={(value, name) => [
+                                        <span key="v" style={{ color: '#0f172a', fontWeight: 700, marginLeft: '8px' }}>₹{Math.round(value * 10) / 10} LPA</span>,
+                                        <span key="n" style={{ color: '#64748b', fontSize: '0.85rem' }}>{name}</span>
+                                    ]}
                                 />
-                                <Area type="monotone" dataKey="maxPackage" name="Max" stroke="#f59e0b" fill="url(#saGradMax)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff', fill: '#f59e0b' }} />
-                                <Area type="monotone" dataKey="avgPackage" name="Average" stroke="#6366f1" fill="url(#saGradAvg)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff', fill: '#6366f1' }} />
-                                <Area type="monotone" dataKey="minPackage" name="Min" stroke="#10b981" fill="url(#saGradMin)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff', fill: '#10b981' }} />
-                            </AreaChart>
+                                <Line type="monotone" dataKey="maxPackage" name="Maximum" stroke="#f59e0b" strokeWidth={3} dot={{ r: 5, strokeWidth: 2, fill: '#fff', stroke: '#f59e0b' }} activeDot={{ r: 7, strokeWidth: 0, fill: '#f59e0b' }} />
+                                <Line type="monotone" dataKey="avgPackage" name="Average" stroke="#6366f1" strokeWidth={3} dot={{ r: 5, strokeWidth: 2, fill: '#fff', stroke: '#6366f1' }} activeDot={{ r: 7, strokeWidth: 0, fill: '#6366f1' }} />
+                                <Line type="monotone" dataKey="minPackage" name="Minimum" stroke="#10b981" strokeWidth={3} dot={{ r: 5, strokeWidth: 2, fill: '#fff', stroke: '#10b981' }} activeDot={{ r: 7, strokeWidth: 0, fill: '#10b981' }} />
+                            </LineChart>
                         </ResponsiveContainer>
                     </div>
                 )}

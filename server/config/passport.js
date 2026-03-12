@@ -25,8 +25,10 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      // BACKEND_URL must be the Render server URL (e.g. https://internship-placement-portal.onrender.com)
+      // NOT the Vercel frontend URL
       callbackURL: process.env.NODE_ENV === 'production'
-        ? 'https://internship-placement-portal-kappa.vercel.app/api/auth/google/callback'
+        ? `${process.env.BACKEND_URL || 'https://internship-placement-portal.onrender.com'}/api/auth/google/callback`
         : (process.env.GOOGLE_CALLBACK_URL || '/api/auth/google/callback'),
       scope: ['profile', 'email'],
     },
@@ -83,8 +85,10 @@ passport.use(
     {
       clientID: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      // BACKEND_URL must be the Render server URL (e.g. https://internship-placement-portal.onrender.com)
+      // NOT the Vercel frontend URL
       callbackURL: process.env.NODE_ENV === 'production'
-        ? 'https://internship-placement-portal-kappa.vercel.app/api/auth/github/callback'
+        ? `${process.env.BACKEND_URL || 'https://internship-placement-portal.onrender.com'}/api/auth/github/callback`
         : (process.env.GITHUB_CALLBACK_URL || '/api/auth/github/callback'),
       scope: ['user:email'],
     },

@@ -1,7 +1,8 @@
 // Sidebar — professional role-based sidebar with widgets & animations
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import authService from '../services/authService';
 import {
   FaHome,
   FaBriefcase,
@@ -37,10 +38,38 @@ import {
 import NotificationDropdown from './NotificationDropdown';
 
 const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const sidebarRef = useRef(null);
+  const avatarInputRef = useRef(null);
+
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
+
+  const handleAvatarClick = () => {
+    if (!avatarUploading) avatarInputRef.current?.click();
+  };
+
+  const handleAvatarChange = useCallback(async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+    setAvatarError('');
+    setAvatarUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      await authService.uploadAvatar(formData);
+      await refreshUser();
+    } catch (err) {
+      setAvatarError(err?.response?.data?.message || 'Upload failed. Try again.');
+      setTimeout(() => setAvatarError(''), 4000);
+    } finally {
+      setAvatarUploading(false);
+    }
+  }, [refreshUser]);
 
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -232,9 +261,42 @@ const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
         {user && (
           <div className="sidebar-profile d-flex justify-content-between align-items-center" style={{ position: 'relative' }}>
             <div className="d-flex align-items-center" style={{ gap: '0.75rem' }}>
-              <div className="sidebar-profile-avatar" style={{ background: currentRole.gradient, minWidth: '32px' }}>
-                {user.name?.charAt(0).toUpperCase()}
+              {/* Clickable Avatar */}
+              <div
+                className={`sidebar-avatar-wrapper${avatarUploading ? ' uploading' : ''}`}
+                onClick={handleAvatarClick}
+                title="Click to change profile photo"
+                style={{ position: 'relative', minWidth: '36px', width: '36px', height: '36px', cursor: 'pointer', flexShrink: 0 }}
+              >
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.25)' }}
+                  />
+                ) : (
+                  <div className="sidebar-profile-avatar" style={{ background: currentRole.gradient, width: '36px', height: '36px', lineHeight: '36px', textAlign: 'center', borderRadius: '50%', fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>
+                    {user.name?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                {/* Hover overlay */}
+                <div className="sidebar-avatar-overlay">
+                  {avatarUploading ? (
+                    <div className="sidebar-avatar-spinner" />
+                  ) : (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+                  )}
+                </div>
+                {/* Hidden file input */}
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  style={{ display: 'none' }}
+                  onChange={handleAvatarChange}
+                />
               </div>
+
               {!isCollapsed && (
                 <div className="sidebar-profile-info" style={{ overflow: 'hidden' }}>
                   <div className="sidebar-profile-greeting">{getGreeting()}</div>
@@ -243,6 +305,9 @@ const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
                     <currentRole.icon size={10} className="me-1" />
                     {currentRole.label}
                   </div>
+                  {avatarError && (
+                    <div style={{ fontSize: '0.68rem', color: '#f87171', marginTop: '2px', lineHeight: '1.2' }}>{avatarError}</div>
+                  )}
                 </div>
               )}
             </div>

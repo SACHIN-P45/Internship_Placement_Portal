@@ -8,6 +8,8 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Sidebar from './components/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
+import PageLoader from './components/PageLoader';
+import { useAuth } from './context/AuthContext';
 
 // Pages
 import Home from './pages/Home';
@@ -34,8 +36,13 @@ import NotFound from './pages/NotFound';
 const NO_SIDEBAR_ROUTES = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/oauth/callback'];
 
 function App() {
+  const { loading } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
+
+  // Show full-page loader while auth context validates the JWT
+  if (loading) return <PageLoader />;
+
   const hideSidebar = NO_SIDEBAR_ROUTES.includes(location.pathname);
 
   return (

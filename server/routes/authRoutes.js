@@ -16,10 +16,12 @@ const {
   forgotPassword,
   resetPassword,
   oauthCallback,
+  uploadAvatar,
 } = require('../controllers/authController');
 const protect = require('../middleware/auth');
 const authorize = require('../middleware/role');
 const upload = require('../middleware/upload');
+const uploadAvatarMiddleware = require('../middleware/uploadAvatar');
 
 router.post('/register', register);
 router.post('/login', login);
@@ -27,6 +29,9 @@ router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
 router.get('/me', protect, getMe);
 router.put('/me', protect, updateProfile);
+
+// Avatar upload route
+router.put('/avatar', protect, uploadAvatarMiddleware.single('avatar'), uploadAvatar);
 
 // Resume routes
 router.put(
@@ -41,6 +46,7 @@ router.get('/resume/:resumeId', protect, authorize('student'), downloadResume);
 router.get('/application/:applicationId/resume', protect, authorize('company'), downloadApplicantResume);
 router.put('/resume/:resumeId/activate', protect, authorize('student'), activateResume);
 router.delete('/resume/:resumeId', protect, authorize('student'), deleteResume);
+
 
 // Helper: build client-side failure URL
 const getFailureRedirect = () =>

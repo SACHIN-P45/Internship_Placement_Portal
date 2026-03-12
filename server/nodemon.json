@@ -1,7 +1,12 @@
 {
     "watch": [
-        "*.js",
-        "*.json",
+        "server.js",
+        "controllers",
+        "models",
+        "routes",
+        "middleware",
+        "utils",
+        "config",
         ".env"
     ],
     "ext": "js,json",

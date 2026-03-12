@@ -1,4 +1,23 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
+build/
+build.log
+
+# Environment variables
 .env
-uploads/*.pdf
+.env.local
+.env.production
+
+# Upload storage
+uploads/
+
+# OS / Editor temp files
+.DS_Store
+Thumbs.db
+*.log
+
+# Stray root-level files
+stu.css

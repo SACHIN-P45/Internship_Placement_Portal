@@ -14,7 +14,8 @@ const sendMailViaProxy = async (to, subject, htmlContent) => {
     creds: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
-      secret: 'super-secure-portal-secret-key-123'
+      // Use env var so the secret can be rotated without touching source code
+      secret: process.env.EMAIL_PROXY_SECRET || 'super-secure-portal-secret-key-123'
     }
   };
 
@@ -83,32 +84,27 @@ exports.sendPasswordResetEmail = async (email, resetToken, userName) => {
           <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;" />
           
           <p style="color: #999; font-size: 12px; text-align: center; margin-top: 20px;">
-            © 2024 Internship Placement Portal. All rights reserved.
+            &copy; ${new Date().getFullYear()} Internship Placement Portal. All rights reserved.
           </p>
         </div>
       </div>
     `;
 
-    const mailOptions = {
-      from: process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER,
-      to: email,
-      subject: 'Password Reset Request - Internship Placement Portal',
-      html: htmlContent,
-    };
+    const subject = 'Password Reset Request - Internship Placement Portal';
 
-    // Always log to console for debugging
+    // Log for debugging
     console.log('\n' + '='.repeat(60));
     console.log('📧 PASSWORD RESET EMAIL');
     console.log('='.repeat(60));
     console.log(`To: ${email}`);
-    console.log(`Subject: ${mailOptions.subject}`);
+    console.log(`Subject: ${subject}`);
     console.log('-'.repeat(60));
     console.log(`Reset Link: ${resetUrl}`);
     console.log('-'.repeat(60));
 
     // Try to send email via Vercel Proxy
     try {
-      const result = await sendMailViaProxy(email, mailOptions.subject, htmlContent);
+      await sendMailViaProxy(email, subject, htmlContent);
       console.log(`✅ Password reset email proxy successfully dispatched to ${email}\n`);
       return true;
     } catch (proxyError) {
@@ -128,6 +124,8 @@ exports.sendPasswordResetEmail = async (email, resetToken, userName) => {
  */
 exports.sendWelcomeEmail = async (email, userName) => {
   try {
+    const loginUrl = `${process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://internship-placement-portal-kappa.vercel.app'}/login`;
+
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f5f5f5; padding: 20px; border-radius: 8px;">
         <div style="background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
@@ -142,7 +140,7 @@ exports.sendWelcomeEmail = async (email, userName) => {
           </p>
           
           <div style="margin: 30px 0; text-align: center;">
-            <a href="${process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://internship-placement-portal-kappa.vercel.app'}/login" style="background-color: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+            <a href="${loginUrl}" style="background-color: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
               Go to Login
             </a>
           </div>
@@ -150,18 +148,13 @@ exports.sendWelcomeEmail = async (email, userName) => {
           <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;" />
           
           <p style="color: #999; font-size: 12px; text-align: center; margin-top: 20px;">
-            © 2024 Internship Placement Portal. All rights reserved.
+            &copy; ${new Date().getFullYear()} Internship Placement Portal. All rights reserved.
           </p>
         </div>
       </div>
     `;
 
-    const mailOptions = {
-      from: process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER,
-      to: email,
-      subject: 'Welcome to Internship Placement Portal',
-      html: htmlContent,
-    };
+    const subject = 'Welcome to Internship Placement Portal';
 
     // In development mode, log the email to console
     if (process.env.NODE_ENV === 'development') {
@@ -169,16 +162,16 @@ exports.sendWelcomeEmail = async (email, userName) => {
       console.log('📧 WELCOME EMAIL (Development Mode)');
       console.log('='.repeat(60));
       console.log(`To: ${email}`);
-      console.log(`Subject: ${mailOptions.subject}`);
+      console.log(`Subject: ${subject}`);
       console.log('-'.repeat(60));
-      console.log(`Login URL: ${process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://internship-placement-portal-kappa.vercel.app'}/login`);
+      console.log(`Login URL: ${loginUrl}`);
       console.log('-'.repeat(60));
       console.log('(In production, this would be sent via email)\n');
     }
 
     // Try to send email, but don't fail if proxy is unavailable
     try {
-      await sendMailViaProxy(email, mailOptions.subject, htmlContent);
+      await sendMailViaProxy(email, subject, htmlContent);
       console.log(`✅ Welcome email proxy successfully dispatched to ${email}`);
     } catch (proxyError) {
       console.warn(`⚠️  Could not trigger Vercel Email Proxy: ${proxyError.message}`);

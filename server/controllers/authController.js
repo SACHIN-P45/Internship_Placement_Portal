@@ -328,10 +328,11 @@ exports.forgotPassword = async (req, res, next) => {
       return res.status(400).json({ message: 'Please provide your email' });
     }
 
-    // Find user by email
+    // Find user by email — always respond generically to prevent email enumeration
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: 'No account found with this email address' });
+      // Return 200 with a generic message — never reveal whether the email is registered
+      return res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent.' });
     }
 
     // Generate reset token
@@ -361,7 +362,7 @@ exports.forgotPassword = async (req, res, next) => {
       });
     }
 
-    res.json({ message: 'Password reset link sent to your email' });
+    res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
   } catch (error) {
     next(error);
   }
@@ -509,3 +510,33 @@ exports.oauthCallback = async (req, res, next) => {
     res.redirect(`${process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://internship-placement-portal-kappa.vercel.app'}/login?error=oauth_failed`);
   }
 };
+
+// @desc    Upload profile avatar image
+// @route   PUT /api/auth/avatar
+// @access  Private
+exports.uploadAvatar = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Please upload an image file' });
+    }
+
+    // Convert buffer to base64 data URI — stored directly in MongoDB
+    const base64 = req.file.buffer.toString('base64');
+    const dataUri = `data:${req.file.mimetype};base64,${base64}`;
+
+    // Update user avatar in MongoDB
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { avatar: dataUri },
+      { new: true }
+    );
+
+    res.json({
+      message: 'Avatar uploaded successfully',
+      avatar: user.avatar,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

@@ -249,56 +249,59 @@ const CompanyDashboard = () => {
   ];
 
   return (
-    <div className="cmp-dashboard">
-      {/* ══════════ Header ══════════ */}
-      <div className="cmp-header">
-        <div className="cmp-header-left">
-          <div className="cmp-header-avatar">
-            {(user?.companyName || user?.name || 'C').charAt(0).toUpperCase()}
+    <div className="cmp-page">
+      {/* ══════════ Hero Header ══════════ */}
+      <div className="cmp-hero">
+        <div className="cmp-hero-bg" />
+        <div className="cmp-hero-content">
+          <div className="cmp-hero-left">
+            <div className="cmp-hero-icon">
+              <FaBriefcase size={26} />
+            </div>
+            <div>
+              <h1 className="cmp-hero-title">Welcome, {user?.companyName || user?.name} 👋</h1>
+              <p className="cmp-hero-sub">Employer Dashboard — Manage job postings & applicants</p>
+            </div>
           </div>
-          <div>
-            <h2 className="cmp-header-title">{user?.companyName || user?.name}</h2>
-            <p className="cmp-header-sub">Employer Dashboard — Manage job postings & applicants</p>
+          <div className="cmp-hero-actions">
+            <button
+              className="cmp-hero-btn cmp-hero-btn-ghost"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              title="Refresh"
+            >
+              <FaSyncAlt size={14} className={refreshing ? 'cmp-spin' : ''} />
+              <span>Refresh</span>
+            </button>
+            <button
+              className={`cmp-hero-btn ${showForm ? 'cmp-hero-btn-ghost' : 'cmp-hero-btn-primary'}`}
+              onClick={() => {
+                resetForm();
+                setShowForm(!showForm);
+              }}
+            >
+              {showForm ? <FaTimes size={14} /> : <FaPlus size={14} />}
+              <span>{showForm ? 'Cancel' : 'Post Job'}</span>
+            </button>
           </div>
-        </div>
-        <div className="cmp-header-right">
-          <button
-            className="cmp-refresh-btn"
-            onClick={handleRefresh}
-            disabled={refreshing}
-            title="Refresh"
-          >
-            <FaSyncAlt size={14} className={refreshing ? 'cmp-spin' : ''} />
-          </button>
-          <button
-            className={`cmp-post-btn ${showForm ? 'cmp-post-btn-cancel' : ''}`}
-            onClick={() => {
-              resetForm();
-              setShowForm(!showForm);
-            }}
-          >
-            {showForm ? <FaTimes size={14} /> : <FaPlus size={14} />}
-            <span>{showForm ? 'Cancel' : 'Post Job'}</span>
-          </button>
         </div>
       </div>
 
-      {/* ══════════ Stats Grid ══════════ */}
-      <div className="cmp-stats-grid">
-        {statCards.map((s, i) => (
-          <div key={i} className="cmp-stat-card">
-            <div className="cmp-stat-icon" style={{ background: s.bg, color: s.color }}>
-              <s.icon size={20} />
+      {/* ══════════ Stats Row ══════════ */}
+      <div className="cmp-stats-row">
+        {[
+          { icon: FaBriefcase, value: jobs.length, label: 'Total Posts', variant: 'blue' },
+          { icon: FaRocket, value: activeJobs, label: 'Active Jobs', variant: 'emerald' },
+          { icon: FaGraduationCap, value: internships, label: 'Internships', variant: 'violet' },
+          { icon: FaUsers, value: totalApplicants, label: 'Total Applicants', variant: 'amber' },
+        ].map((s, i) => (
+          <div key={i} className={`cmp-stat-card cmp-stat-${s.variant}`} style={{ animationDelay: `${i * 0.05}s` }}>
+            <div className="cmp-stat-icon-wrap"><s.icon size={20} /></div>
+            <div className="cmp-stat-content">
+              <span className="cmp-stat-number">{s.value}</span>
+              <span className="cmp-stat-text">{s.label}</span>
             </div>
-            <div className="cmp-stat-info">
-              <div className="cmp-stat-value">{s.value}</div>
-              <div className="cmp-stat-label">{s.label}</div>
-            </div>
-            {s.trend && (
-              <div className="cmp-stat-trend">
-                <FaArrowUp size={9} /> {s.trend}
-              </div>
-            )}
+            <div className="cmp-stat-glow" />
           </div>
         ))}
       </div>
@@ -477,8 +480,8 @@ const CompanyDashboard = () => {
       )}
 
       {/* ══════════ Jobs Section ══════════ */}
-      <div className="cmp-section">
-        <div className="cmp-section-header">
+      <div className="cmp-content">
+        <div className="cmp-section-header" style={{ marginTop: '24px' }}>
           <div>
             <h5 className="cmp-section-title">
               <FaBriefcase className="text-primary" /> My Job Postings
@@ -581,30 +584,31 @@ const CompanyDashboard = () => {
       {showApplicants && (
         <div className="cmp-modal-overlay" onClick={() => setShowApplicants(false)}>
           <div className="cmp-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="cmp-modal-header">
+            <div className="cmp-modal-header" style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h5 className="cmp-modal-title">
-                  <FaUsers className="me-2" />
+                <h5 className="cmp-modal-title" style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700', color: '#1e293b' }}>
+                  <FaUsers className="me-2" style={{ color: '#3b82f6' }} />
                   Applicants for "{selectedJob?.title}"
                 </h5>
-                <p className="cmp-modal-sub">
+                <p className="cmp-modal-sub" style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#64748b' }}>
                   {applicants.length} total applicant{applicants.length !== 1 ? 's' : ''}
                 </p>
               </div>
-              <button className="cmp-modal-close" onClick={() => setShowApplicants(false)}>
+              <button className="cmp-modal-close" onClick={() => setShowApplicants(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '8px', borderRadius: '8px' }}>
                 <FaTimes size={18} />
               </button>
             </div>
 
             {/* Filters */}
-            <div className="cmp-modal-filters">
-              <div className="cmp-modal-search">
-                <FaSearch size={12} className="cmp-modal-search-icon" />
+            <div className="cmp-modal-filters" style={{ padding: '16px 24px', background: '#f8fafc', display: 'flex', gap: '12px', borderBottom: '1px solid #f1f5f9' }}>
+              <div className="cmp-modal-search" style={{ position: 'relative', flex: 1 }}>
+                <FaSearch size={12} className="cmp-modal-search-icon" style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: '12px', color: '#94a3b8' }} />
                 <input
                   type="text"
                   placeholder="Search by name or email..."
                   value={applicantSearch}
                   onChange={(e) => setApplicantSearch(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px 8px 32px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
                 />
               </div>
               <div className="cmp-modal-filter">
@@ -703,7 +707,7 @@ const CompanyDashboard = () => {
         }}
         fileName={selectedApplicationName}
       />
-    </div>
+    </div >
   );
 };
 

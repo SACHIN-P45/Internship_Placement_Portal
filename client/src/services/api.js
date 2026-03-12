@@ -16,21 +16,15 @@ API.interceptors.request.use((config) => {
   const user = JSON.parse(localStorage.getItem('user'));
   if (user?.token) {
     config.headers.Authorization = `Bearer ${user.token}`;
-    console.log('API Request:', config.method, config.url, 'Token attached');
-  } else {
-    console.log('API Request:', config.method, config.url, 'NO TOKEN');
   }
   return config;
 });
 
-// Log errors
+// Global response error handler
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      console.error('401 Unauthorized - Token may be invalid or missing');
-      localStorage.removeItem('user');
-    }
+    // Let callers handle errors — AuthContext will clear the user on 401 if needed
     return Promise.reject(error);
   }
 );

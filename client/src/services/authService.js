@@ -6,6 +6,10 @@ const authService = {
   login: (data) => API.post('/auth/login', data),
   getMe: () => API.get('/auth/me'),
   updateProfile: (data) => API.put('/auth/me', data),
+  uploadAvatar: (formData) =>
+    API.put('/auth/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
   uploadResume: (formData) =>
     API.put('/auth/resume', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },

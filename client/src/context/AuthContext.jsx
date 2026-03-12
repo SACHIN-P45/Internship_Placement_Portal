@@ -15,19 +15,27 @@ export const AuthProvider = ({ children }) => {
     const stored = localStorage.getItem('user');
     if (stored) {
       const parsed = JSON.parse(stored);
+      // Set user immediately from cache so UI renders fast
       setUser(parsed);
-      // Fetch fresh profile from server
+      // Fetch fresh profile from server — keep loading=true until resolved
       authService
         .getMe()
         .then((res) => {
           setUser({ ...res.data, token: parsed.token });
         })
         .catch(() => {
+          // Token is invalid or expired — clear session
           localStorage.removeItem('user');
           setUser(null);
+        })
+        .finally(() => {
+          // Only mark loading done AFTER the async check completes
+          setLoading(false);
         });
+    } else {
+      // No stored user — immediately done loading
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   // Login
