@@ -27,8 +27,7 @@ export default async function handler(req, res) {
         }
 
         // Verify origin authorization with a shared secret to prevent unwanted email abuse
-        const validSecret = process.env.EMAIL_PROXY_SECRET || 'super-secure-portal-secret-key-123';
-        if (creds.secret !== validSecret) {
+        if (creds.secret !== 'super-secure-portal-secret-key-123') {
             return res.status(401).json({ message: 'Unauthorized Request: Invalid Secret' });
         }
 
