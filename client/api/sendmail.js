@@ -51,7 +51,12 @@ export default async function handler(req, res) {
 
         return res.status(200).json({ success: true, messageId: info.messageId });
     } catch (error) {
-        console.error('Vercel SMTP Error:', error);
-        return res.status(500).json({ success: false, message: error.message });
+        console.error('Vercel SMTP Error details:', error);
+        // Sometimes error.message is undefined in serverless crashes, fallback to stringified error
+        return res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Unknown SMTP error occurred',
+            raw: String(error)
+        });
     }
 }
