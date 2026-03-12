@@ -1,41 +1,34 @@
 // Email service — password reset, welcome, and application status notifications
 // Rewritten to proxy requests to Vercel Serverless Function since Render blocks outbound SMTP
 
+const nodemailer = require('nodemailer');
+
 /**
- * Send email via Vercel proxy
+ * Send email directly via SMTP (Nodemailer)
  */
-const sendMailViaProxy = async (to, subject, htmlContent) => {
-  const proxyUrl = 'https://internship-placement-portal-kappa.vercel.app/api/sendmail';
-
-  const payload = {
-    to,
-    subject,
-    htmlContent,
-    creds: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD,
-      // Use env var so the secret can be rotated without touching source code
-      secret: process.env.EMAIL_PROXY_SECRET || 'super-secure-portal-secret-key-123'
-    }
-  };
-
+const sendMailDirect = async (to, subject, htmlContent) => {
   try {
-    const response = await fetch(proxyUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
       },
-      body: JSON.stringify(payload)
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: response.statusText }));
-      throw new Error(errorData.message || 'Error from email proxy');
-    }
+    const mailOptions = {
+      from: `"Placement Portal" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html: htmlContent,
+    };
 
-    return await response.json();
+    const info = await transporter.sendMail(mailOptions);
+    return info;
   } catch (error) {
-    throw new Error('Vercel SMTP Proxy Failed: ' + error.message);
+    throw new Error('SMTP Error: ' + error.message);
   }
 };
 
@@ -104,11 +97,11 @@ exports.sendPasswordResetEmail = async (email, resetToken, userName) => {
 
     // Try to send email via Vercel Proxy
     try {
-      await sendMailViaProxy(email, subject, htmlContent);
-      console.log(`✅ Password reset email proxy successfully dispatched to ${email}\n`);
+      await sendMailDirect(email, subject, htmlContent);
+      console.log(`✅ Password reset email successfully dispatched to ${email}\n`);
       return true;
     } catch (proxyError) {
-      console.error(`❌ Error triggering Vercel Email Proxy:`, proxyError.message);
+      console.error(`❌ Error triggering email:`, proxyError.message);
       throw proxyError;
     }
   } catch (error) {
@@ -171,10 +164,10 @@ exports.sendWelcomeEmail = async (email, userName) => {
 
     // Try to send email, but don't fail if proxy is unavailable
     try {
-      await sendMailViaProxy(email, subject, htmlContent);
-      console.log(`✅ Welcome email proxy successfully dispatched to ${email}`);
+      await sendMailDirect(email, subject, htmlContent);
+      console.log(`✅ Welcome email successfully dispatched to ${email}`);
     } catch (proxyError) {
-      console.warn(`⚠️  Could not trigger Vercel Email Proxy: ${proxyError.message}`);
+      console.warn(`⚠️  Could not trigger email: ${proxyError.message}`);
       console.log(`📌 Welcome email information available in console output above`);
     }
 
@@ -272,7 +265,7 @@ exports.sendApplicationStatusEmail = async (email, studentName, jobTitle, compan
 
     // Non-fatal — never break the status update flow
     try {
-      await sendMailViaProxy(email, cfg.subject, htmlContent);
+      await sendMailDirect(email, cfg.subject, htmlContent);
       console.log(`✅ Application status email dispatched to ${email}\n`);
     } catch (proxyError) {
       console.warn(`⚠️  Could not send application status email: ${proxyError.message}`);
