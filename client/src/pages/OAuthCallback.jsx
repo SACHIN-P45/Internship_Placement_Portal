@@ -10,7 +10,6 @@ const OAuthCallback = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const data = searchParams.get('data');
     const errorParam = searchParams.get('error');
 
     if (errorParam) {
@@ -23,12 +22,21 @@ const OAuthCallback = () => {
       return;
     }
 
-    if (data) {
-      try {
-        const userData = JSON.parse(decodeURIComponent(data));
-        setUserFromOAuth(userData);
+    // ✅ FIX: Read auth data from the secure one-time handoff cookie, NOT from the URL.
+    // The old approach (URL query param) exposed the JWT in browser history & server logs.
+    const getCookie = (name) => {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? match[2] : null;
+    };
 
-        // Redirect based on role
+    const cookieData = getCookie('oauth_handoff');
+
+    if (cookieData) {
+      // Immediately clear the cookie so it cannot be replayed
+      document.cookie = 'oauth_handoff=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+      try {
+        const userData = JSON.parse(atob(cookieData));
+        setUserFromOAuth(userData);
         if (userData.role === 'admin') {
           navigate('/admin/dashboard');
         } else if (userData.role === 'company') {

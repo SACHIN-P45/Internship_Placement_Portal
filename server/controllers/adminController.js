@@ -133,6 +133,26 @@ exports.deleteUser = async (req, res, next) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // ✅ FIX: Cascade-delete all records owned by this user.
+    // Without this, deleting a student leaves orphaned Application docs that crash
+    // company routes. Deleting a company leaves orphaned Job + Application docs.
+    if (user.role === 'student') {
+      // Remove all applications made by this student
+      await Application.deleteMany({ student: user._id });
+    }
+
+    if (user.role === 'company') {
+      // Find all jobs posted by this company
+      const companyJobs = await Job.find({ company: user._id }).select('_id');
+      const jobIds = companyJobs.map((j) => j._id);
+      // Remove all applications for those jobs
+      if (jobIds.length > 0) {
+        await Application.deleteMany({ job: { $in: jobIds } });
+      }
+      // Remove all jobs posted by this company
+      await Job.deleteMany({ company: user._id });
+    }
+
     await user.deleteOne();
     res.json({ message: 'User removed' });
   } catch (error) {

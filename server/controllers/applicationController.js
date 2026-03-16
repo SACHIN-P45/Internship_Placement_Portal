@@ -125,6 +125,12 @@ exports.updateApplicationStatus = async (req, res, next) => {
       return res.status(404).json({ message: 'Application not found' });
     }
 
+    // ✅ FIX: Guard against orphaned applications where the job was deleted.
+    // application.job will be null if the referenced job no longer exists.
+    if (!application.job) {
+      return res.status(404).json({ message: 'The job associated with this application no longer exists' });
+    }
+
     // Ensure company owns the job
     if (
       application.job.company.toString() !== req.user._id.toString() &&

@@ -17,12 +17,12 @@
       #app-splash {
         position: fixed;
         inset: 0;
-        background: linear-gradient(135deg, #0f0c29 0%, #1a1a4e 50%, #0f0c29 100%);
+        background: linear-gradient(135deg, #0a1628 0%, #0d2137 40%, #061520 100%);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 2rem;
+        gap: 1.5rem;
         z-index: 99999;
         animation: splash-fadein 0.4s ease;
       }
@@ -30,72 +30,83 @@
         from { opacity: 0; }
         to   { opacity: 1; }
       }
-      .splash-logo-wrap {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1.2rem;
-      }
-      .splash-rings {
+      .splash-orbit-wrapper {
         position: relative;
-        width: 80px;
-        height: 80px;
+        width: 140px;
+        height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
-      .splash-rings::before,
-      .splash-rings::after {
-        content: '';
+      .splash-ring {
         position: absolute;
         inset: 0;
         border-radius: 50%;
-        border: 3px solid transparent;
+        border: 2px solid transparent;
       }
-      .splash-rings::before {
-        border-top-color: #6366f1;
-        border-right-color: #6366f1;
-        animation: splash-spin 1s linear infinite;
+      .splash-ring-1 {
+        border-top-color: rgba(6, 182, 212, 0.8);
+        border-right-color: rgba(6, 182, 212, 0.4);
+        animation: splash-spin 2.4s linear infinite;
       }
-      .splash-rings::after {
-        border-bottom-color: #a78bfa;
-        border-left-color: #a78bfa;
-        inset: 12px;
-        animation: splash-spin 0.7s linear infinite reverse;
-      }
-      .splash-core {
-        position: absolute;
-        inset: 24px;
-        background: radial-gradient(circle, #6366f1, #4f46e5);
-        border-radius: 50%;
-        box-shadow: 0 0 20px rgba(99,102,241,0.7);
-        animation: splash-pulse 1.5s ease-in-out infinite;
+      .splash-ring-2 {
+        inset: 10px;
+        border-bottom-color: rgba(59, 130, 246, 0.9);
+        border-left-color: rgba(59, 130, 246, 0.4);
+        animation: splash-spin 1.8s linear infinite reverse;
       }
       @keyframes splash-spin {
         to { transform: rotate(360deg); }
       }
-      @keyframes splash-pulse {
-        0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(99,102,241,0.6); }
-        50%       { transform: scale(1.15); box-shadow: 0 0 30px rgba(99,102,241,0.9); }
+      .splash-logo-container {
+        position: relative;
+        z-index: 2;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
-      .splash-title {
+      .splash-logo {
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+        position: relative;
+        z-index: 3;
+        animation: splash-pulse 3s ease-in-out infinite;
+      }
+      @keyframes splash-pulse {
+        0%, 100% { transform: scale(1); }
+        50%       { transform: scale(1.06); }
+      }
+      .splash-brand {
+        display: flex;
+        align-items: baseline;
+        gap: 0;
         font-family: system-ui, -apple-system, sans-serif;
-        font-size: 1.5rem;
-        font-weight: 700;
-        background: linear-gradient(90deg, #818cf8, #c4b5fd, #818cf8);
-        background-size: 200% auto;
+        font-size: 1.8rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      .splash-brand-1 {
+        background: linear-gradient(135deg, #06b6d4, #3b82f6);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        animation: splash-shimmer 2s linear infinite;
-        letter-spacing: 0.05em;
+      }
+      .splash-brand-2 {
+        background: linear-gradient(135deg, #10b981, #059669);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
       .splash-subtitle {
         font-family: system-ui, -apple-system, sans-serif;
-        font-size: 0.8rem;
-        color: rgba(255,255,255,0.4);
-        letter-spacing: 0.2em;
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.35);
+        letter-spacing: 0.3em;
         text-transform: uppercase;
-      }
-      @keyframes splash-shimmer {
-        to { background-position: 200% center; }
+        margin-top: -1rem;
       }
       .splash-progress-track {
         width: 180px;
@@ -106,10 +117,10 @@
       }
       .splash-progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, #6366f1, #a78bfa, #6366f1);
+        background: linear-gradient(90deg, #06b6d4, #3b82f6, #10b981);
         background-size: 200% auto;
         border-radius: 99px;
-        animation: splash-progress 1.8s ease-in-out infinite;
+        animation: splash-progress 1.6s ease-in-out infinite;
       }
       @keyframes splash-progress {
         0%   { transform: translateX(-100%); }
@@ -120,13 +131,18 @@
   <body>
     <div id="root">
       <div id="app-splash">
-        <div class="splash-logo-wrap">
-          <div class="splash-rings">
-            <div class="splash-core"></div>
+        <div class="splash-orbit-wrapper">
+          <div class="splash-ring splash-ring-1"></div>
+          <div class="splash-ring splash-ring-2"></div>
+          <div class="splash-logo-container">
+            <img src="/logo.png" alt="PlacementPortal" class="splash-logo" />
           </div>
-          <div class="splash-title">PlacementPortal</div>
-          <div class="splash-subtitle">Connecting Careers</div>
         </div>
+        <div class="splash-brand">
+          <span class="splash-brand-1">Placement</span>
+          <span class="splash-brand-2">Portal</span>
+        </div>
+        <div class="splash-subtitle">CONNECTING CAREERS</div>
         <div class="splash-progress-track">
           <div class="splash-progress-fill"></div>
         </div>

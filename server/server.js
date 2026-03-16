@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+const cookieParser = require('cookie-parser');
 
 // Dev-only: handle SSL cert chain issues (antivirus/proxy MITM)
 if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
@@ -30,26 +31,40 @@ const notificationRoutes = require('./routes/notificationRoutes');
 connectDB();
 
 // --- AUTO-SEED ADMIN AND PLACEMENT HEAD TO LIVE ATLAS DB ---
+// ✅ FIX: Credentials are now read exclusively from environment variables.
+// Hardcoded default passwords (admin123, placement123) have been removed —
+// they were a backdoor for anyone who read the source code.
 const seedAdmins = async () => {
   const User = require('./models/User');
+
+  const adminEmail    = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  const phEmail       = process.env.PH_EMAIL;
+  const phPassword    = process.env.PH_PASSWORD;
+
+  if (!adminEmail || !adminPassword || !phEmail || !phPassword) {
+    console.warn('⚠️  Seed skipped: ADMIN_EMAIL / ADMIN_PASSWORD / PH_EMAIL / PH_PASSWORD env vars not set.');
+    return;
+  }
+
   try {
-    const adminExists = await User.findOne({ email: 'admin@portal.com' });
+    const adminExists = await User.findOne({ email: adminEmail });
     if (!adminExists) {
       await User.create({
         name: 'Admin User',
-        email: 'admin@portal.com',
-        password: 'admin123',
+        email: adminEmail,
+        password: adminPassword,
         role: 'admin',
       });
       console.log('✅ Live DB Seed: Admin user created!');
     }
 
-    const headExists = await User.findOne({ email: 'placementhead@test.com' });
+    const headExists = await User.findOne({ email: phEmail });
     if (!headExists) {
       await User.create({
         name: 'Dr. Placement Officer',
-        email: 'placementhead@test.com',
-        password: 'placement123',
+        email: phEmail,
+        password: phPassword,
         role: 'placementHead',
         department: 'Placement Cell',
       });
@@ -61,6 +76,7 @@ const seedAdmins = async () => {
 };
 seedAdmins();
 // -----------------------------------------------------------
+
 
 // Start automatic job expiration checker
 startJobExpirationChecker();
@@ -103,6 +119,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // --------------- Passport OAuth ---------------
 app.use(passport.initialize());

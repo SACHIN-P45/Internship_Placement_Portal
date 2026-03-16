@@ -13,8 +13,16 @@ exports.register = async (req, res, next) => {
   try {
     const { name, email, password, role, companyName, website, description, googleId, githubId } = req.body;
 
+    // ✅ FIX: Privilege escalation guard — only 'student' and 'company' are self-registerable.
+    // Attempting to register as 'admin' or 'placementHead' is explicitly forbidden.
+    const ALLOWED_SELF_REGISTER_ROLES = ['student', 'company'];
+    const requestedRole = role || 'student';
+    if (!ALLOWED_SELF_REGISTER_ROLES.includes(requestedRole)) {
+      return res.status(403).json({ message: 'You are not allowed to register with that role' });
+    }
+
     // Companies cannot register via OAuth
-    if (role === 'company' && (googleId || githubId)) {
+    if (requestedRole === 'company' && (googleId || githubId)) {
       return res.status(400).json({ message: 'Company accounts must be registered with email and password only' });
     }
 
@@ -29,11 +37,11 @@ exports.register = async (req, res, next) => {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
-    // Build user object
-    const userData = { name, email, password, role: role || 'student' };
+    // Build user object — use validated role only
+    const userData = { name, email, password, role: requestedRole };
 
     // Attach company fields if registering as company
-    if (role === 'company') {
+    if (requestedRole === 'company') {
       userData.companyName = companyName || name;
       userData.website = website || '';
       userData.description = description || '';
@@ -489,7 +497,6 @@ exports.oauthCallback = async (req, res, next) => {
     // Generate JWT token
     const token = generateToken(user._id, user.role);
 
-    // Create user data for frontend
     const userData = {
       _id: user._id,
       name: user.name,
@@ -500,10 +507,24 @@ exports.oauthCallback = async (req, res, next) => {
       token,
     };
 
-    // Redirect to frontend with encoded user data
-    const encodedData = encodeURIComponent(JSON.stringify(userData));
-    const redirectUrl = `${process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://internship-placement-portal-kappa.vercel.app'}/oauth/callback?data=${encodedData}`;
-    console.log('[OAuth Callback] Redirecting to:', redirectUrl.substring(0, 100) + '...');
+    // ✅ FIX: JWT token URL exposure.
+    // Previously, the full JWT was embedded in the redirect URL as a query param, meaning
+    // it could be captured in server access logs, browser history, and Referer headers.
+    // We now Base64-encode the payload and set it as a short-lived cookie that the
+    // frontend reads once and immediately clears. This keeps the token out of the URL entirely.
+    const encodedData = Buffer.from(JSON.stringify(userData)).toString('base64');
+    const frontendBase = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://internship-placement-portal-kappa.vercel.app';
+
+    res.cookie('oauth_handoff', encodedData, {
+      httpOnly: false,       // Frontend JS must be able to read and clear it
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 1000,     // Expires in 60 seconds — one-time use only
+      path: '/'
+    });
+
+    const redirectUrl = `${frontendBase}/oauth/callback`;
+    console.log('[OAuth Callback] Redirecting to:', redirectUrl);
     res.redirect(redirectUrl);
   } catch (error) {
     console.error('[OAuth Callback] Error:', error.message);

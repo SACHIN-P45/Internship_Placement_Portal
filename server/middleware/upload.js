@@ -7,18 +7,24 @@ const storage = multer.diskStorage({
   destination: function (_req, _file, cb) {
     cb(null, path.join(__dirname, '..', 'uploads'));
   },
-  filename: function (_req, file, cb) {
+  filename: function (_req, _file, cb) {
+    // ✅ FIX: Always force a .pdf extension regardless of originalname
+    // to prevent serving files with dangerous extensions (e.g. .exe disguised as PDF)
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, `resume-${uniqueSuffix}${path.extname(file.originalname)}`);
+    cb(null, `resume-${uniqueSuffix}.pdf`);
   },
 });
 
-// File filter — accept PDF only
+// File filter — double-check BOTH mimetype AND extension to prevent spoofed uploads
 const fileFilter = (_req, file, cb) => {
-  if (file.mimetype === 'application/pdf') {
+  const ext = path.extname(file.originalname).toLowerCase();
+  const isMimePdf = file.mimetype === 'application/pdf';
+  const isExtPdf = ext === '.pdf';
+
+  if (isMimePdf && isExtPdf) {
     cb(null, true);
   } else {
-    cb(new Error('Only PDF files are allowed'), false);
+    cb(new Error('Only PDF files are allowed. Please upload a valid .pdf document.'), false);
   }
 };
 

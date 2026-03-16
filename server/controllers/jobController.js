@@ -181,6 +181,11 @@ exports.deleteJob = async (req, res, next) => {
       return res.status(403).json({ message: 'Not authorized to delete this job' });
     }
 
+    // ✅ FIX: Cascade-delete all applications for this job before deleting the job itself.
+    // Without this, orphaned Application documents cause null-dereference 500 crashes
+    // in updateApplicationStatus and getApplicantsForJob when they try to populate 'job'.
+    await Application.deleteMany({ job: job._id });
+
     await job.deleteOne();
     res.json({ message: 'Job removed' });
   } catch (error) {
