@@ -20,7 +20,68 @@ import {
   FaShieldAlt,
   FaChartBar,
   FaEnvelope,
+  FaTimes,
 } from 'react-icons/fa';
+
+// Custom CSS for premium drawer and inputs
+const customStyles = `
+  .premium-input {
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    font-size: 0.95rem;
+    color: #0f172a;
+    background: #f8fafc;
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .premium-input:focus {
+    background: #ffffff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+    outline: none;
+  }
+  .premium-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .drawer-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1050;
+    transition: opacity 0.3s ease;
+  }
+  .drawer-panel {
+    position: fixed; top: 0; right: 0; bottom: 0; 
+    width: 100%; max-width: 440px;
+    background: #ffffff;
+    z-index: 1060;
+    box-shadow: -20px 0 50px rgba(15, 23, 42, 0.15);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex; flex-direction: column;
+  }
+  .seg-control {
+    display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; margin: 0 28px 20px;
+  }
+  .seg-btn {
+    flex: 1; padding: 10px 0; border-radius: 8px; border: none; font-weight: 600; font-size: 0.9rem;
+    cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .seg-btn[data-active="true"] {
+    background: #ffffff; color: #0f172a; box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+  }
+  .seg-btn[data-active="false"] {
+    background: transparent; color: #64748b;
+  }
+  .seg-btn[data-active="false"]:hover {
+    color: #334155;
+  }
+`;
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -29,6 +90,13 @@ const UserManagement = () => {
   const [userSearch, setUserSearch] = useState('');
   const [actionLoading, setActionLoading] = useState({});
   const [refreshing, setRefreshing] = useState(false);
+
+  // Drawer State
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerTab, setDrawerTab] = useState('student');
+  const [studentForm, setStudentForm] = useState({ name: '', email: '', password: '', department: '' });
+  const [companyForm, setCompanyForm] = useState({ name: '', email: '', password: '', companyName: '', website: '', description: '' });
+  const [isAddingUser, setIsAddingUser] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -89,6 +157,34 @@ const UserManagement = () => {
     }
   };
 
+  const handleStudentSubmit = async (e) => {
+    e.preventDefault();
+    setIsAddingUser(true);
+    try {
+      await adminService.addStudent(studentForm);
+      toast.success('Student added successfully!');
+      setIsDrawerOpen(false);
+      setStudentForm({ name: '', email: '', password: '', department: '' });
+      fetchUsers();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to add student');
+    } finally { setIsAddingUser(false); }
+  };
+
+  const handleCompanySubmit = async (e) => {
+    e.preventDefault();
+    setIsAddingUser(true);
+    try {
+      await adminService.addCompany(companyForm);
+      toast.success('Company added successfully!');
+      setIsDrawerOpen(false);
+      setCompanyForm({ name: '', email: '', password: '', companyName: '', website: '', description: '' });
+      fetchUsers();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to add company');
+    } finally { setIsAddingUser(false); }
+  };
+
   const formatDate = (d) =>
     new Date(d).toLocaleDateString('en-IN', {
       day: 'numeric',
@@ -132,6 +228,7 @@ const UserManagement = () => {
 
   return (
     <div className="phd-page">
+      <style>{customStyles}</style>
       {/* Hero Header */}
       <div className="phd-hero">
         <div className="phd-hero-bg" />
@@ -222,6 +319,19 @@ const UserManagement = () => {
                   <option value="placementHead">Placement Heads</option>
                 </select>
               </div>
+
+              <button
+                onClick={() => setIsDrawerOpen(true)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px', background: '#3b82f6', color: '#fff',
+                  border: 'none', padding: '8px 18px', borderRadius: '12px', fontWeight: 600, fontSize: '0.9rem',
+                  cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 12px -2px rgba(59, 130, 246, 0.4)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.3)'; }}
+              >
+                <FaUserPlus size={14} /> Add User
+              </button>
             </div>
           </div>
 
@@ -273,14 +383,12 @@ const UserManagement = () => {
                           transition: 'all 0.25s ease',
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-3px)';
-                          e.currentTarget.style.boxShadow = '0 12px 20px -8px rgba(0,0,0,0.08), 0 4px 6px -3px rgba(0,0,0,0.04)';
-                          e.currentTarget.style.borderColor = '#e2e8f0';
+                          e.currentTarget.style.background = isBlocked ? '#fffbfb' : '#f8fafc';
+                          e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.025)';
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.background = isBlocked ? '#fffbfb' : '#ffffff';
                           e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -2px rgba(0,0,0,0.01)';
-                          e.currentTarget.style.borderColor = 'transparent';
                         }}
                       >
                         <td style={{ padding: '20px 24px', borderRadius: '16px 0 0 16px', border: '1px solid #f1f5f9', borderRight: 'none', background: 'inherit' }}>
@@ -355,47 +463,39 @@ const UserManagement = () => {
                         </td>
                         <td style={{ padding: '20px 24px', borderRadius: '0 16px 16px 0', border: '1px solid #f1f5f9', borderLeft: 'none', background: 'inherit' }}>
                           {u.role !== 'admin' && u.role !== 'placementHead' ? (
-                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                               <button
                                 onClick={() => handleToggleBlock(u._id)}
                                 disabled={!!actionLoading[u._id]}
                                 title={isBlocked ? 'Restore Access' : 'Suspend User'}
                                 style={{
-                                  width: '38px', height: '38px', borderRadius: '10px', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                                  width: '36px', height: '36px', borderRadius: '50%', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                                   background: isBlocked ? '#ecfdf5' : '#fff1f2',
                                   color: isBlocked ? '#10b981' : '#e11d48',
-                                  boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
-                                  transition: 'all 0.2s', opacity: actionLoading[u._id] ? 0.7 : 1
+                                  transition: 'all 0.2s ease', opacity: actionLoading[u._id] ? 0.7 : 1
                                 }}
-                                onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                               >
                                 {actionLoading[u._id] === 'block' ? (
                                   <span className="spinner-border spinner-border-sm" style={{ width: '14px', height: '14px' }} />
-                                ) : isBlocked ? (
-                                  <FaUnlock size={15} />
-                                ) : (
-                                  <FaBan size={15} />
-                                )}
+                                ) : isBlocked ? <FaUnlock size={14} /> : <FaBan size={14} />}
                               </button>
                               <button
                                 onClick={() => handleDelete(u._id)}
                                 disabled={!!actionLoading[u._id]}
                                 title="Delete permanently"
                                 style={{
-                                  width: '38px', height: '38px', borderRadius: '10px', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                                  background: '#f8fafc', color: '#64748b',
-                                  boxShadow: 'inset 0 0 0 1px #e2e8f0',
-                                  transition: 'all 0.2s', opacity: actionLoading[u._id] ? 0.7 : 1
+                                  width: '36px', height: '36px', borderRadius: '50%', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                                  background: '#f1f5f9', color: '#64748b',
+                                  transition: 'all 0.2s ease', opacity: actionLoading[u._id] ? 0.7 : 1
                                 }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.boxShadow = 'inset 0 0 0 1px #fecaca'; e.currentTarget.style.transform = 'scale(1.05)'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.boxShadow = 'inset 0 0 0 1px #e2e8f0'; e.currentTarget.style.transform = 'scale(1)'; }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.transform = 'scale(1.1)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.transform = 'scale(1)'; }}
                               >
                                 {actionLoading[u._id] === 'delete' ? (
                                   <span className="spinner-border spinner-border-sm" style={{ width: '14px', height: '14px' }} />
-                                ) : (
-                                  <FaTrash size={15} />
-                                )}
+                                ) : <FaTrash size={14} />}
                               </button>
                             </div>
                           ) : (
@@ -410,6 +510,103 @@ const UserManagement = () => {
                 </tbody>
               </table>
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* Side Drawer Overlay */}
+      <div 
+        className="drawer-overlay" 
+        style={{ opacity: isDrawerOpen ? 1 : 0, pointerEvents: isDrawerOpen ? 'auto' : 'none' }} 
+        onClick={() => setIsDrawerOpen(false)} 
+      />
+
+      {/* Side Drawer */}
+      <div 
+        className="drawer-panel"
+        style={{ transform: isDrawerOpen ? 'translateX(0)' : 'translateX(100%)' }}
+      >
+        {/* Drawer Header */}
+        <div style={{ padding: '32px 28px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#0f172a', fontWeight: 700, letterSpacing: '-0.02em' }}>Add New User</h2>
+            <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: '0.9rem', lineHeight: 1.5 }}>Create a new account manually bypassing standard registration.</p>
+          </div>
+          <button onClick={() => setIsDrawerOpen(false)} style={{ background: '#f1f5f9', border: 'none', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#e2e8f0'; e.currentTarget.style.color = '#0f172a'; }} onMouseLeave={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#64748b'; }}>
+            <FaTimes size={14} />
+          </button>
+        </div>
+
+        {/* Drawer Tabs (Segmented Control) */}
+        <div className="seg-control">
+          <button onClick={() => setDrawerTab('student')} className="seg-btn" data-active={drawerTab === 'student'}>
+            <FaUserGraduate /> Student
+          </button>
+          <button onClick={() => setDrawerTab('company')} className="seg-btn" data-active={drawerTab === 'company'}>
+            <FaBuilding /> Company
+          </button>
+        </div>
+
+        {/* Drawer Content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 28px 32px' }}>
+          {drawerTab === 'student' ? (
+            <form onSubmit={handleStudentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <label className="premium-label">Full Name</label>
+                <input type="text" required value={studentForm.name} onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })} className="premium-input" placeholder="e.g. Liam Patel" />
+              </div>
+              <div>
+                <label className="premium-label">Email Address</label>
+                <input type="email" required value={studentForm.email} onChange={(e) => setStudentForm({ ...studentForm, email: e.target.value })} className="premium-input" placeholder="liam@university.edu" />
+              </div>
+              <div>
+                <label className="premium-label">Temporary Password</label>
+                <input type="password" required value={studentForm.password} onChange={(e) => setStudentForm({ ...studentForm, password: e.target.value })} className="premium-input" placeholder="••••••••" minLength={6} />
+              </div>
+              <div>
+                <label className="premium-label">Department (Optional)</label>
+                <input type="text" value={studentForm.department} onChange={(e) => setStudentForm({ ...studentForm, department: e.target.value })} className="premium-input" placeholder="e.g. Computer Science" />
+              </div>
+              
+              <div style={{ marginTop: '24px' }}>
+                <button type="submit" disabled={isAddingUser} style={{ padding: '14px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', cursor: isAddingUser ? 'not-allowed' : 'pointer', transition: 'all 0.2s', width: '100%', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)', opacity: isAddingUser ? 0.7 : 1 }} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+                  {isAddingUser ? 'Creating Account...' : 'Create Student Account'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleCompanySubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <label className="premium-label">Company Name</label>
+                <input type="text" required value={companyForm.companyName} onChange={(e) => setCompanyForm({ ...companyForm, companyName: e.target.value })} className="premium-input" placeholder="e.g. Acme Tech" />
+              </div>
+              <div>
+                <label className="premium-label">Contact Person</label>
+                <input type="text" required value={companyForm.name} onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })} className="premium-input" placeholder="e.g. Sarah Connor" />
+              </div>
+              <div>
+                <label className="premium-label">Email Address</label>
+                <input type="email" required value={companyForm.email} onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })} className="premium-input" placeholder="sarah@acme.com" />
+              </div>
+              <div>
+                <label className="premium-label">Temporary Password</label>
+                <input type="password" required value={companyForm.password} onChange={(e) => setCompanyForm({ ...companyForm, password: e.target.value })} className="premium-input" placeholder="••••••••" minLength={6} />
+              </div>
+              <div>
+                <label className="premium-label">Website</label>
+                <input type="text" value={companyForm.website} onChange={(e) => setCompanyForm({ ...companyForm, website: e.target.value })} className="premium-input" placeholder="https://acme.com" />
+              </div>
+              <div>
+                <label className="premium-label">Headline / Short Info</label>
+                <textarea rows="3" value={companyForm.description} onChange={(e) => setCompanyForm({ ...companyForm, description: e.target.value })} className="premium-input" style={{ resize: 'none' }} placeholder="Leading cloud solutions provider..." />
+              </div>
+              
+              <div style={{ marginTop: '24px' }}>
+                <button type="submit" disabled={isAddingUser} style={{ padding: '14px', background: '#10b981', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', cursor: isAddingUser ? 'not-allowed' : 'pointer', transition: 'all 0.2s', width: '100%', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)', opacity: isAddingUser ? 0.7 : 1 }} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+                  {isAddingUser ? 'Creating Account...' : 'Create Company Account'}
+                </button>
+              </div>
+            </form>
           )}
         </div>
       </div>

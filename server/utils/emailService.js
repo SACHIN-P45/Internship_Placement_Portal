@@ -327,3 +327,75 @@ exports.sendApplicationStatusEmail = async (email, studentName, jobTitle, compan
     return false; // Non-fatal
   }
 };
+
+/**
+ * Send custom broadcast email
+ */
+exports.sendBroadcastEmail = async (emails, subject, message) => {
+  try {
+    const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://internship-placement-portal-kappa.vercel.app';
+    const htmlContent = `
+      <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; padding: 40px 20px; min-height: 100vh;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);">
+          
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 32px 24px; text-align: center; position: relative; overflow: hidden;">
+            <div style="position: absolute; inset: 0; opacity: 0.1; background-image: radial-gradient(#475569 2px, transparent 2px); background-size: 20px 20px;"></div>
+            <div style="position: relative; z-index: 1;">
+              <div style="background: rgba(255, 255, 255, 0.1); width: 56px; height: 56px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 26px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+                📢
+              </div>
+              <h2 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.5px; line-height: 1.3;">
+                ${subject}
+              </h2>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div style="padding: 36px 32px;">
+            <p style="color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-top: 0; margin-bottom: 16px;">
+              Admin Broadcast
+            </p>
+            
+            <div style="color: #334155; font-size: 16px; line-height: 1.7; white-space: pre-wrap; font-weight: 400; padding: 20px; background-color: #f1f5f9; border-left: 4px solid #3b82f6; border-radius: 4px;">
+${message}
+            </div>
+            
+            <div style="text-align: center; margin-top: 36px;">
+              <a href="${frontendUrl}" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);">
+                Access Portal Dashboard
+              </a>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #f1f5f9; padding: 24px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="color: #64748b; font-size: 13px; margin: 0 0 4px 0; font-weight: 500;">
+              Internship Placement Portal
+            </p>
+            <p style="color: #94a3b8; font-size: 12px; margin: 0; line-height: 1.5;">
+              You are receiving this system announcement from the platform administration.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    console.log('\\n' + '='.repeat(60));
+    console.log('📢 ADMIN BROADCAST DISPATCHED');
+    console.log('='.repeat(60));
+    console.log(`Recipients: ${emails.length} users`);
+    console.log(`Subject: ${subject}`);
+    
+    // For large lists, it is better to chunk, but we'll send a bulk loop for simplicity
+    for (const email of emails) {
+       await sendMailViaProxy(email, subject, htmlContent).catch(e => console.error("Broadcast failed for", email, e.message));
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('❌ Broadcast error:', error.message);
+    return false;
+  }
+};

@@ -129,6 +129,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // --------------- API Routes ---------------
 app.use('/api/auth', authRoutes);
+app.get('/api/settings', require('./controllers/adminController').getSettings);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/admin', adminRoutes);

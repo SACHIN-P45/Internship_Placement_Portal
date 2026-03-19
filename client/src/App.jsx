@@ -1,5 +1,5 @@
 // Main App component — routing configuration
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -10,6 +10,7 @@ import Sidebar from './components/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
 import PageLoader from './components/PageLoader';
 import { useAuth } from './context/AuthContext';
+import adminService from './services/adminService';
 
 // Pages
 import Home from './pages/Home';
@@ -36,14 +37,54 @@ import NotFound from './pages/NotFound';
 const NO_SIDEBAR_ROUTES = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/oauth/callback'];
 
 function App() {
-  const { loading } = useAuth();
+  const { user, loading } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [appSettings, setAppSettings] = useState(null);
+  const [settingsLoading, setSettingsLoading] = useState(true);
   const location = useLocation();
 
-  // Show full-page loader while auth context validates the JWT
-  if (loading) return <PageLoader />;
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await adminService.getPublicSettings();
+        setAppSettings(res.data.settings);
+      } catch (err) {
+        console.error("Failed to fetch settings:", err);
+      } finally {
+        setSettingsLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
 
-  const hideSidebar = NO_SIDEBAR_ROUTES.includes(location.pathname);
+  // Show full-page loader while auth context validates the JWT
+  if (loading || settingsLoading) return <PageLoader />;
+
+  const isMaintenanceMode = appSettings?.maintenanceMode && user?.role !== 'admin';
+  const hideSidebar = NO_SIDEBAR_ROUTES.includes(location.pathname) || isMaintenanceMode;
+
+  if (isMaintenanceMode) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '20px', textAlign: 'center' }}>
+        <div style={{ fontSize: '64px', marginBottom: '20px', animation: 'bounce 2s infinite' }}>🚧</div>
+        <h1 style={{ color: '#0f172a', fontWeight: 'bold', fontSize: '2.5rem', marginBottom: '16px' }}>Platform Under Maintenance</h1>
+        <p style={{ color: '#64748b', fontSize: '1.1rem', maxWidth: '600px', lineHeight: '1.6', marginBottom: '32px' }}>
+          We are currently performing scheduled maintenance to improve the platform infrastructure. 
+          Please check back later. We apologize for the inconvenience!
+        </p>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button onClick={() => window.location.reload()} style={{ padding: '12px 24px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
+            Try Again
+          </button>
+          {!user && (
+            <button onClick={() => window.location.href = '/login'} style={{ padding: '12px 24px', background: 'transparent', color: '#64748b', border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
+              Admin Login
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={hideSidebar ? '' : 'app-layout'}>
