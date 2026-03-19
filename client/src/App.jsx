@@ -60,28 +60,105 @@ function App() {
   // Show full-page loader while auth context validates the JWT
   if (loading || settingsLoading) return <PageLoader />;
 
-  const isMaintenanceMode = appSettings?.maintenanceMode && user?.role !== 'admin';
+  const isMaintenanceMode = appSettings?.maintenanceMode && user?.role !== 'admin' && location.pathname !== '/login';
   const hideSidebar = NO_SIDEBAR_ROUTES.includes(location.pathname) || isMaintenanceMode;
 
   if (isMaintenanceMode) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '20px', textAlign: 'center' }}>
-        <div style={{ fontSize: '64px', marginBottom: '20px', animation: 'bounce 2s infinite' }}>🚧</div>
-        <h1 style={{ color: '#0f172a', fontWeight: 'bold', fontSize: '2.5rem', marginBottom: '16px' }}>Platform Under Maintenance</h1>
-        <p style={{ color: '#64748b', fontSize: '1.1rem', maxWidth: '600px', lineHeight: '1.6', marginBottom: '32px' }}>
-          We are currently performing scheduled maintenance to improve the platform infrastructure. 
-          Please check back later. We apologize for the inconvenience!
-        </p>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button onClick={() => window.location.reload()} style={{ padding: '12px 24px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
-            Try Again
-          </button>
-          {!user && (
-            <button onClick={() => window.location.href = '/login'} style={{ padding: '12px 24px', background: 'transparent', color: '#64748b', border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
-              Admin Login
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
+        padding: '20px', 
+        textAlign: 'center',
+        fontFamily: "'Inter', system-ui, -apple-system, sans-serif"
+      }}>
+        <div style={{ 
+          background: 'rgba(255, 255, 255, 0.03)', 
+          backdropFilter: 'blur(12px)', 
+          border: '1px solid rgba(255, 255, 255, 0.1)', 
+          borderRadius: '24px', 
+          padding: '60px 40px',
+          maxWidth: '600px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+        }}>
+          <div style={{ 
+            fontSize: '80px', 
+            marginBottom: '30px', 
+            animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.5))'
+          }}>
+            🚧
+          </div>
+          <h1 style={{ 
+            color: 'white', 
+            fontWeight: '800', 
+            fontSize: '3rem', 
+            marginBottom: '20px',
+            letterSpacing: '-0.025em'
+          }}>
+            Systems Offline
+          </h1>
+          <p style={{ 
+            color: '#94a3b8', 
+            fontSize: '1.25rem', 
+            lineHeight: '1.7', 
+            marginBottom: '40px',
+            fontWeight: '400'
+          }}>
+            We're currently fine-tuning our platform to provide you with a even better experience. We'll be back online shortly.
+          </p>
+          <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+            <button 
+              onClick={() => window.location.reload()} 
+              style={{ 
+                padding: '14px 32px', 
+                background: '#3b82f6', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '12px', 
+                fontWeight: '600', 
+                fontSize: '1rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.5)'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+            >
+              Check Status
             </button>
-          )}
+            {!user && (
+              <button 
+                onClick={() => window.location.href = '/login'} 
+                style={{ 
+                  padding: '14px 32px', 
+                  background: 'transparent', 
+                  color: 'white', 
+                  border: '1px solid rgba(255, 255, 255, 0.2)', 
+                  borderRadius: '12px', 
+                  fontWeight: '600', 
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                Admin Gateway
+              </button>
+            )}
+          </div>
         </div>
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+          }
+        `}} />
       </div>
     );
   }
