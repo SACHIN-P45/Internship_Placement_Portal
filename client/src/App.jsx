@@ -57,107 +57,248 @@ function App() {
     fetchSettings();
   }, []);
 
+  // Dynamic Maintenance States
+  const [progress, setProgress] = useState(0);
+  const [tickerLabel, setTickerLabel] = useState('Initialising services…');
+  const [isChecking, setIsChecking] = useState(false);
+  const [lastChecked, setLastChecked] = useState('just now');
+  const [startTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  const [mountTime] = useState(Date.now());
+
+  const isMaintenanceMode = appSettings?.maintenanceMode && user?.role !== 'admin' && location.pathname !== '/login';
+
+  useEffect(() => {
+    if (isMaintenanceMode) {
+      const steps = [
+        { val: 18, label: 'Syncing database schemas…' },
+        { val: 37, label: 'Migrating placement records…' },
+        { val: 55, label: 'Rebuilding search indexes…' },
+        { val: 71, label: 'Applying security patches…' },
+        { val: 86, label: 'Running integration tests…' },
+        { val: 94, label: 'Finalising deployments…' },
+      ];
+
+      let timeoutIds = [];
+      
+      // Initial jump
+      const t1 = setTimeout(() => {
+        setProgress(8);
+      }, 700);
+      timeoutIds.push(t1);
+
+      // Animate steps
+      steps.forEach((step, index) => {
+        const t = setTimeout(() => {
+          setProgress(step.val);
+          setTickerLabel(step.label);
+        }, 1500 + index * 2600);
+        timeoutIds.push(t);
+      });
+
+      // Live clock for "Last checked"
+      const interval = setInterval(() => {
+        const secs = Math.round((Date.now() - mountTime) / 1000);
+        if (!isChecking) {
+          setLastChecked(
+            secs < 10 ? 'just now' : 
+            secs < 60 ? `${secs}s ago` : 
+            `${Math.round(secs / 60)}m ago`
+          );
+        }
+      }, 1000);
+
+      return () => {
+        timeoutIds.forEach(id => clearTimeout(id));
+        clearInterval(interval);
+      };
+    }
+  }, [isMaintenanceMode, mountTime, isChecking]);
+
   // Show full-page loader while auth context validates the JWT
   if (loading || settingsLoading) return <PageLoader />;
 
-  const isMaintenanceMode = appSettings?.maintenanceMode && user?.role !== 'admin' && location.pathname !== '/login';
   const hideSidebar = NO_SIDEBAR_ROUTES.includes(location.pathname) || isMaintenanceMode;
+
+  const handleRefresh = () => {
+    if (isChecking) return;
+    setIsChecking(true);
+    setLastChecked('just now');
+    setTimeout(() => {
+      setIsChecking(false);
+    }, 2000);
+  };
 
   if (isMaintenanceMode) {
     return (
-      <div style={{ 
+      <div className="maintenance-root" style={{ 
         minHeight: '100vh', 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
-        padding: '20px', 
-        textAlign: 'center',
-        fontFamily: "'Inter', system-ui, -apple-system, sans-serif"
+        background: '#05060f',
+        color: '#e8eaff',
+        fontFamily: "'DM Sans', sans-serif",
+        overflow: 'hidden',
+        position: 'relative'
       }}>
-        <div style={{ 
-          background: 'rgba(255, 255, 255, 0.03)', 
-          backdropFilter: 'blur(12px)', 
-          border: '1px solid rgba(255, 255, 255, 0.1)', 
-          borderRadius: '24px', 
-          padding: '60px 40px',
-          maxWidth: '600px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+        {/* Background Canvas */}
+        <div className="bg-canvas">
+          <div className="orb orb-1" />
+          <div className="orb orb-2" />
+        </div>
+
+        <div className="scene" style={{ 
+          position: 'relative', zIndex: 1, height: '100vh', 
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem' 
         }}>
-          <div style={{ 
-            fontSize: '80px', 
-            marginBottom: '30px', 
-            animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.5))'
+          <div className="card" style={{ 
+            background: 'rgba(13, 15, 31, 0.75)', backdropFilter: 'blur(24px)', 
+            border: '1px solid rgba(255,255,255,0.07)', borderRadius: '28px', 
+            padding: '3.5rem 3.5rem 3rem', maxWidth: '560px', width: '100%', position: 'relative',
+            boxShadow: '0 0 0 1px rgba(108,99,255,0.12), 0 32px 80px rgba(0,0,0,0.6), 0 0 60px rgba(108,99,255,0.35)'
           }}>
-            🚧
-          </div>
-          <h1 style={{ 
-            color: 'white', 
-            fontWeight: '800', 
-            fontSize: '3rem', 
-            marginBottom: '20px',
-            letterSpacing: '-0.025em'
-          }}>
-            Systems Offline
-          </h1>
-          <p style={{ 
-            color: '#94a3b8', 
-            fontSize: '1.25rem', 
-            lineHeight: '1.7', 
-            marginBottom: '40px',
-            fontWeight: '400'
-          }}>
-            We're currently fine-tuning our platform to provide you with a even better experience. We'll be back online shortly.
-          </p>
-          <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-            <button 
-              onClick={() => window.location.reload()} 
-              style={{ 
-                padding: '14px 32px', 
-                background: '#3b82f6', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '12px', 
-                fontWeight: '600', 
-                fontSize: '1rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.5)'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-            >
-              Check Status
-            </button>
-            {!user && (
+            {/* Logo Ring */}
+            <div className="icon-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2.2rem' }}>
+              <div className="icon-ring">
+                <img src="/logo.png" alt="Logo" style={{ width: '45px', height: 'auto', borderRadius: '8px' }} />
+              </div>
+            </div>
+
+            {/* Badge */}
+            <div style={{ textAlign: 'center', marginBottom: '1.4rem' }}>
+              <span className="badge">
+                <span className="badge-dot" /> Scheduled Maintenance
+              </span>
+            </div>
+
+            {/* Heading */}
+            <h1 style={{ 
+              textAlign: 'center', fontFamily: "'Syne', sans-serif", fontSize: 'clamp(2rem, 5vw, 2.8rem)', 
+              fontWeight: 800, lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: '1rem',
+              background: 'linear-gradient(135deg, #e8eaff 30%, #6c63ff 70%, #00d4aa 100%)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+            }}>
+              Upgrading<br />PlacementPortal
+            </h1>
+
+            {/* Subtext */}
+            <p className="sub" style={{ textAlign: 'center', color: '#7b7f9e', fontSize: '0.97rem', lineHeight: '1.65', fontWeight: 300, marginBottom: '2.2rem' }}>
+              We're reinforcing our core infrastructure to bring you a <span style={{ color: '#e8eaff', fontWeight: 500 }}>faster, smarter placement experience</span>. Everything will be back shortly — hang tight.
+            </p>
+
+            {/* Progress */}
+            <div className="progress-wrap" style={{ marginBottom: '2rem' }}>
+              <div className="progress-labels" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#7b7f9e', marginBottom: '8px' }}>
+                <span id="ticker" style={{ transition: 'opacity 0.4s', color: '#00d4aa' }}>{tickerLabel}</span>
+                <span>{progress}%</span>
+              </div>
+              <div className="progress-track" style={{ height: '5px', background: 'rgba(255,255,255,0.06)', borderRadius: '99px', overflow: 'hidden' }}>
+                <div className="progress-fill" style={{ 
+                  height: '100%', width: `${progress}%`, borderRadius: '99px', 
+                  background: 'linear-gradient(90deg, #6c63ff, #00d4aa)', boxShadow: '0 0 10px rgba(0,212,170,0.4)',
+                  transition: 'width 2.5s cubic-bezier(0.4,0,0.2,1)'
+                }} />
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '2rem' }}>
+              <div className="stat">
+                <span className="stat-val">99.9%</span>
+                <span className="stat-label">Uptime SLA</span>
+              </div>
+              <div className="stat">
+                <span className="stat-val">~15m</span>
+                <span className="stat-label">Est. Return</span>
+              </div>
+              <div className="stat">
+                <span className="stat-val">v3.0</span>
+                <span className="stat-label">New Version</span>
+              </div>
+            </div>
+
+            {/* Button */}
+            <div className="btn-wrap">
               <button 
-                onClick={() => window.location.href = '/login'} 
-                style={{ 
-                  padding: '14px 32px', 
-                  background: 'transparent', 
-                  color: 'white', 
-                  border: '1px solid rgba(255, 255, 255, 0.2)', 
-                  borderRadius: '12px', 
-                  fontWeight: '600', 
-                  fontSize: '1rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                className="btn" 
+                onClick={handleRefresh}
+                style={{
+                  width: '100%', padding: '1rem 2rem', borderRadius: '14px', border: 'none',
+                  fontFamily: "'Syne', sans-serif", fontSize: '0.95rem', fontWeight: 700, letterSpacing: '0.04em',
+                  cursor: 'pointer', background: 'linear-gradient(135deg, #6c63ff 0%, #4f46e5 100%)', color: '#fff'
                 }}
-                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
-                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
               >
-                Admin Gateway
+                <div className="btn-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                  {isChecking && <div className="spin" />}
+                  <span>{isChecking ? 'Checking…' : 'Check Status'}</span>
+                </div>
               </button>
+            </div>
+
+            {/* ETA Strip */}
+            <div className="eta" style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center', marginTop: '1.5rem', fontSize: '0.78rem', color: '#7b7f9e' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7b7f9e" strokeWidth="2" strokeLinecap="round">
+                <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+              </svg>
+              Started at <strong style={{ color: '#e8eaff', margin: '0 4px' }}>{startTime}</strong> · Last checked <span style={{ marginLeft: '4px' }}>{lastChecked}</span>
+            </div>
+
+            {!user && (
+              <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+                <a href="/login" style={{ fontSize: '0.75rem', color: '#7b7f9e', textDecoration: 'underline' }}>Admin Gateway</a>
+              </div>
             )}
           </div>
         </div>
+
         <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.05); }
+          @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+          .bg-canvas { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+          .bg-canvas::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(108,99,255,0.18) 0%, transparent 60%),
+                        radial-gradient(ellipse 60% 50% at 80% 85%, rgba(0,212,170,0.12) 0%, transparent 55%),
+                        radial-gradient(ellipse 50% 40% at 65% 20%, rgba(108,99,255,0.08) 0%, transparent 50%);
           }
+          .bg-canvas::after {
+            content: ''; position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+          }
+
+          .orb { position: fixed; border-radius: 50%; filter: blur(90px); animation: drift 12s ease-in-out infinite alternate; opacity: 0.4; }
+          .orb-1 { width: 420px; height: 420px; background: #6c63ff; top: -120px; left: -80px; animation-delay: 0s; }
+          .orb-2 { width: 300px; height: 300px; background: #00d4aa; bottom: -100px; right: -60px; animation-delay: -5s; }
+          @keyframes drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(30px, 40px) scale(1.05); } }
+
+          .icon-ring {
+            width: 76px; height: 76px; border-radius: 50%;
+            background: linear-gradient(135deg, rgba(108,99,255,0.2), rgba(0,212,170,0.1));
+            border: 1.5px solid rgba(108,99,255,0.35);
+            display: flex; align-items: center; justify-content: center;
+            animation: pulsering 3s ease-in-out infinite;
+          }
+          @keyframes pulsering {
+            0%,100% { box-shadow: 0 0 0 0 rgba(108,99,255,0.4), 0 0 0 12px rgba(108,99,255,0.0); }
+            50% { box-shadow: 0 0 0 8px rgba(108,99,255,0.15), 0 0 0 20px rgba(108,99,255,0.05); }
+          }
+
+          .badge {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: rgba(108,99,255,0.1); border: 1px solid rgba(108,99,255,0.25);
+            border-radius: 100px; padding: 5px 14px; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: #a09af0;
+          }
+          .badge-dot { width: 7px; height: 7px; border-radius: 50%; background: #00d4aa; box-shadow: 0 0 6px #00d4aa; animation: blink 1.4s ease-in-out infinite; }
+          @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+          .stat { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 14px 10px; text-align: center; }
+          .stat-val { font-family: 'Syne', sans-serif; font-size: 1.25rem; font-weight: 700; color: #e8eaff; display: block; }
+          .stat-label { font-size: 0.68rem; color: #7b7f9e; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; }
+
+          .spin {
+            width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.25);
+            border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite;
+          }
+          @keyframes spin { to { transform: rotate(360deg); } }
         `}} />
       </div>
     );
