@@ -22,20 +22,16 @@ const OAuthCallback = () => {
       return;
     }
 
-    // ✅ FIX: Read auth data from the secure one-time handoff cookie, NOT from the URL.
-    // The old approach (URL query param) exposed the JWT in browser history & server logs.
-    const getCookie = (name) => {
-      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-      return match ? match[2] : null;
-    };
+    // Cross-domain cookie fix: backend (Render) and frontend (Vercel) are on different
+    // domains, so cookies set by Render are NEVER visible to Vercel.
+    // We now read the Base64url-encoded auth data directly from the ?data= URL param.
+    const encodedData = searchParams.get('data');
 
-    const cookieData = getCookie('oauth_handoff');
-
-    if (cookieData) {
-      // Immediately clear the cookie so it cannot be replayed
-      document.cookie = 'oauth_handoff=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+    if (encodedData) {
       try {
-        const userData = JSON.parse(atob(cookieData));
+        // base64url → base64 conversion for atob compatibility
+        const base64 = encodedData.replace(/-/g, '+').replace(/_/g, '/');
+        const userData = JSON.parse(atob(base64));
         setUserFromOAuth(userData);
         if (userData.role === 'admin') {
           navigate('/admin/dashboard');

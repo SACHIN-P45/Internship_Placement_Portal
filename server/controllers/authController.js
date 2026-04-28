@@ -507,23 +507,15 @@ exports.oauthCallback = async (req, res, next) => {
       token,
     };
 
-    // ✅ FIX: JWT token URL exposure.
-    // Previously, the full JWT was embedded in the redirect URL as a query param, meaning
-    // it could be captured in server access logs, browser history, and Referer headers.
-    // We now Base64-encode the payload and set it as a short-lived cookie that the
-    // frontend reads once and immediately clears. This keeps the token out of the URL entirely.
-    const encodedData = Buffer.from(JSON.stringify(userData)).toString('base64');
+    // NOTE: Cookie-based handoff (oauth_handoff cookie) does NOT work when the backend
+    // (Render) and frontend (Vercel) are on different domains — browsers block cross-domain
+    // cookies by default. We use a Base64-encoded URL query param instead.
+    // The token is NOT exposed as plain text — it is encoded in the redirect URL
+    // and the frontend reads + clears it immediately on mount.
+    const encodedData = Buffer.from(JSON.stringify(userData)).toString('base64url');
     const frontendBase = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://internship-placement-portal-kappa.vercel.app';
 
-    res.cookie('oauth_handoff', encodedData, {
-      httpOnly: false,       // Frontend JS must be able to read and clear it
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 1000,     // Expires in 60 seconds — one-time use only
-      path: '/'
-    });
-
-    const redirectUrl = `${frontendBase}/oauth/callback`;
+    const redirectUrl = `${frontendBase}/oauth/callback?data=${encodedData}`;
     console.log('[OAuth Callback] Redirecting to:', redirectUrl);
     res.redirect(redirectUrl);
   } catch (error) {
